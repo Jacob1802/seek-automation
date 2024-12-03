@@ -22,9 +22,6 @@ class ApplicationPipeline:
     
     def _load_applied_emails(self):
         if not self.applied_path.exists():
-            with self.applied_path.open('w', newline='', encoding='utf-8') as file:
-                writer = csv.writer(file)
-                writer.writerow(['email', 'id'])
             return []
 
         with self.applied_path.open('r') as file:
