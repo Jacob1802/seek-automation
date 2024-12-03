@@ -66,7 +66,7 @@ class AIAgent:
 
     def write_email_contents(self):
         email_content = self.llm.prompt(message=f"""
-            Now write the contents of the email, I have scraped these email of these recruiters so keep the cold email breif and to the point, I will also be attaching my resume and cover letter
+            Now write the contents of the email, I have scraped these email of these recruiters so keep the cold email brief and to the point, I will also be attaching my resume and cover letter
             format the email in as follows & exclude a subject:
             Dear first name
             contents of email
