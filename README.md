@@ -48,7 +48,7 @@ This project automates the process of applying for jobs by scraping job listings
 5.
     **Run the application**:
     ```bash
-    python3 apply.py [Your first name]
+    python3 apply.py --name [Your first name]
     ```
 
 ## Customisation
