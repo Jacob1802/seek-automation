@@ -38,7 +38,7 @@ def add_args():
                         help='Protocol to send mail',
                         default="smtp.gmail.com")
 
-    # This is set to True by default as seek largest english userbase is Australia & NZ
+    # This is set to True by default as seeks largest english userbase is Australia & NZ
     parser.add_argument('--australian_language', 
                         type=bool,
                         help='Convert llm output to australian type language',
