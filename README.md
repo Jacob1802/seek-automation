@@ -45,8 +45,8 @@ This project automates the process of applying for jobs by scraping job listings
     ```
 4. **Prepare your resume files**:
     - Ensure `resume.txt` and `resume.pdf` exist in the `application_materials` directory.
-5.
-    **Run the application**:
+
+5. **Run the application**:
     ```bash
     python3 apply.py --name [Your first name]
     ```
@@ -70,5 +70,6 @@ This project automates the process of applying for jobs by scraping job listings
  - `--australian_language`: Toggle Australian English e.g prompt llm to convert ize words to ise (default: True)
 
 ## Notes
-- Ensure your mail account has secure app access enabled or app-specific passwords configured.
-- Applications are tracked in `applied.csv` to avoid sending duplicates.
+ - Ensure your mail account has secure app access enabled or app-specific passwords configured.
+ - Applications are tracked in `application_materials/applied.csv` to avoid sending duplicates.
+ - Using other llms official APIs such as Openai or Claude would likely improve performance such as speed & higher quality responses.
