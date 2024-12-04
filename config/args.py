@@ -22,11 +22,6 @@ def add_args():
                         type=str,
                         help='Path to config file',
                         default="config/run_config.json")
-
-    parser.add_argument('--search_terms', 
-                        type=str,
-                        help='Path to search terms file',
-                        default="config/search_terms.json")
     
     parser.add_argument('--cover_letter_path', 
                         type=str,
