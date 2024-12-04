@@ -4,25 +4,25 @@ This project automates the process of applying for jobs by scraping job listings
 
 ## Features
 
-- **Job Scraping**: Uses the Apify Seek Job Scraper to fetch job listings based on search terms.  
-- **AI-Generated Cover Letters**: Customises cover letters using LLM (MetaAI), ensuring proper Australian formatting.  
-- **Email Automation**: Sends job applications with attached resumes and cover letters to recruiters via Gmail.  
-- **Tracking Applications**: Tracks sent applications to prevent duplicate submissions.  
+- **Job Scraping**: Uses the Apify Seek Job Scraper to fetch job listings based on search terms.
+- **AI-Generated Cover Letters**: Customises cover letters using LLM (MetaAI), ensuring proper Australian formatting.
+- **Email Automation**: Sends job applications with attached resumes and cover letters to recruiters via Gmail.
+- **Tracking Applications**: Tracks sent applications to prevent duplicate submissions.
 
 ## Setup Requirements
 
 1. **Apify API Key**  
-   - Create an Apify account and obtain an API key for the Seek Job Scraper.  
-   - Store the API key in an `.env` file as `APIFY_KEY`.  
+   - Create an Apify account and obtain an API key for the Seek Job Scraper.
+   - Store the API key in an `.env` file as `APIFY_KEY`.
 
 2. **Mail App Password**  
-   - Generate an App Password in your mail Account settings for your mail account.  
-   - Store the mail account & app password in the `.env` file as `SENDER_MAIL` & `SENDER_PASSWORD`.  
+   - Generate an App Password in your mail Account settings for your mail account.
+   - Store the mail account & app password in the `.env` file as `SENDER_MAIL` & `SENDER_PASSWORD`.
 
 3. **Resume Preparation**  
    - Create the following files:
-     - `application_materials/resume.txt`: A plain-text version of your resume, used for AI-generated content.  
-     - `application_materials/resume.pdf`: A PDF version of your resume, attached to job applications.  
+     - `application_materials/resume.txt`: A plain-text version of your resume, used for AI-generated content.
+     - `application_materials/resume.pdf`: A PDF version of your resume, attached to job applications.
 
 ## How to Use
 
@@ -70,5 +70,5 @@ This project automates the process of applying for jobs by scraping job listings
  - `--australian_language`: Toggle Australian English e.g prompt llm to convert ize words to ise (default: True)
 
 ## Notes
-- Ensure your mail account has secure app access enabled or app-specific passwords configured.  
-- Applications are tracked in `applied.csv` to avoid sending duplicates.  
+- Ensure your mail account has secure app access enabled or app-specific passwords configured.
+- Applications are tracked in `applied.csv` to avoid sending duplicates.
