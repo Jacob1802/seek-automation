@@ -13,7 +13,6 @@ logging.basicConfig(
 def main():
     args = add_args()
     try:
-        assert args.first_name != '', "Don't forget to add your name in the cli Usage: python3 apply.py --first_name [your first name] find all optional args in config/args.py"
         assert Path(args.resume_pdf).exists() == True, f"resume.pdf not found in {args.resume_pdf}"
         assert Path(args.resume_txt).exists() == True, f"resume.txt not found in {args.resume_txt}"
         assert Path(args.config_file).exists() == True, f"config not found in {args.config_file}"
