@@ -4,10 +4,17 @@ from email.mime.base import MIMEBase
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from email import encoders
+from pathlib import Path
+import logging
 import smtplib
 import os
 
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+)
 
 class EmailSender:
     def __init__(self, smtp_protocol):
@@ -35,7 +42,7 @@ class EmailSender:
             self._send_email(msg)
             return True
         except Exception as e:
-            print(f"Failed to send email: {e}")
+            logging.error(f"Failed to send email: {e}")
             return False
     
     def _prepare_email(self,
@@ -57,23 +64,22 @@ class EmailSender:
         # Attach files
         for file_type, file_path in attachments:
             try:
-                with open(file_path, 'rb') as file:
-                    part = MIMEBase('application', 'pdf')
-                    part.set_payload(file.read())
-                    encoders.encode_base64(part)
-                    
-                    # Set filename based on type
-                    filename = os.path.basename(file_path)
-                    if not filename.lower().endswith('.pdf'):
-                        filename = f"{filename}.pdf"
-                    
-                    part.add_header(
-                        'Content-Disposition',
-                        f'attachment; filename="{filename}"'
-                    )
-                    msg.attach(part)
+                part = MIMEBase('application', 'pdf')
+                part.set_payload(Path(file_path).read_bytes())
+                encoders.encode_base64(part)
+                
+                # Set filename based on type
+                filename = os.path.basename(file_path)
+                if not filename.lower().endswith('.pdf'):
+                    filename = f"{filename}.pdf"
+                
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{filename}"'
+                )
+                msg.attach(part)
             except Exception as e:
-                print(f"Failed to attach {file_type}: {e}")
+                logging.error(f"Failed to attach {file_type}: {e}")
                 raise
         
         return msg
