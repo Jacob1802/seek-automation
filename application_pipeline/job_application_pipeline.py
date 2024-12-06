@@ -24,19 +24,20 @@ class ApplicationPipeline:
         if not self.applied_path.exists():
             return []
 
-        reader = csv.reader(self.applied_path.open('r'))
-        next(reader)
-        # Use a list to preserve the order, as it may be important to track the most recently applied jobs.
-        applied = [row for row in reader]
+        with self.applied_path.open('r') as file:
+            reader = csv.reader(file)
+            next(reader)
+            # Use a list to preserve the order, as it may be important to track the most recently applied jobs.
+            applied = [row for row in reader]
 
         return applied
 
     def _write_applied(self):
         # Avoid appending to prevent duplicating existing items when reading.
-        writer = csv.DictWriter(self.applied_path.open('w', newline=''), fieldnames=['email', 'id'])
-        writer.writeheader()
-        for row in self.applied:
-            writer.writerow({'email': row[0], 'id': row[1]})
+        with self.applied_path.open('w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=['email', 'id'])
+            writer.writeheader()
+            writer.writerows([{'email': row[0], 'id': row[1]} for row in self.applied])
 
     def run(self, resume_txt: str, resume_pdf_path: str, cover_letter_path: str, your_name: str, convert_to_australian_language: bool):
         try:
