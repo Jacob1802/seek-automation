@@ -31,13 +31,7 @@ This project automates the process of applying for jobs by scraping job listings
    git clone <repository-url>
    cd <repository>
    ```
-2. **Create a virtual environment & install dependencies**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-3. **Copy .env.example to .env**:
+2. **Copy .env.example to .env & edit .env**:
     ```bash
     APIFY_KEY=<Your Apify API Key>
     SENDER_MAIL=<Your Mail Address>
@@ -45,11 +39,14 @@ This project automates the process of applying for jobs by scraping job listings
     ```
 4. **Prepare your resume files**:
     - Ensure `resume.txt` and `resume.pdf` exist in the `application_materials` directory.
-
-5. **Run the application**:
+5. **Install uv**
     ```bash
-    python3 apply.py --name [Your first name]
+    pip install uv
     ```
+6. **Run the application**:
+   ```bash
+    uv run main.py
+   ```
 
 ## Customisation
 **Edit config/run_config.json to customise searches**:
