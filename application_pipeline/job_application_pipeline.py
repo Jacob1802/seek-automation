@@ -1,5 +1,5 @@
 from email_sender.email_sender import EmailSender
-from utils.utils import generate_cover_letter_pdf
+from common.utils import generate_cover_letter_pdf
 from scrapers.scraper import JobScraper
 from agents.agent import AIAgent
 from pathlib import Path
@@ -44,30 +44,18 @@ class ApplicationPipeline:
             logging.info("Scraping job listings...")
             job_data = self.scraper.scrape("websift/seek-job-scraper")
 
-            logging.info("Extracting contact information...")
-            jobs = [
-                job
-                for job in job_data if job['contacts']
-                for contact in job['contacts'] if contact['type'].lower() == 'email'
-            ]
-            
-            logging.info(f"Found {len(jobs)} jobs with contact information")
+            logging.info(f"Found {len(job_data)} jobs with contact information")
 
             # Process each job and send applications
-            for job in jobs:
+            for job in job_data:
                 try:
                     job_id = job['id']
                     self.agent = AIAgent(your_name)
-
-                    # Skips jobs that don't have an email
-                    emails = [email['value'] for email in job['contacts'] if email['type'].lower() == "email"]
-                    if not emails:
-                        continue
                     
                     applied_emails = [item[0] for item in self.applied]
                     position = job.get('title', '')
                     
-                    for email in emails:
+                    for email in job['emails']:
                         if email in applied_emails:
                             continue
 

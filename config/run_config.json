@@ -7,5 +7,6 @@
         "Entry Level Software Developer"
     ],
     "maxResults": 50,
-    "SortBy": "ListedDate"
+    "SortBy": "ListedDate",
+    "requireEmail": true
 }
