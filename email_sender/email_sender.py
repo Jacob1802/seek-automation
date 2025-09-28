@@ -1,7 +1,6 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from email import encoders
 from pathlib import Path
@@ -23,12 +22,7 @@ class EmailSender:
         self.smtp_server = smtp_protocol
         self.smtp_port = 587
     
-    def send_application(self, 
-                        recipient_email: str,
-                        job_data: Dict,
-                        email_body: str,
-                        resume_path: str,
-                        cover_letter_path: str) -> bool:
+    def send_application(self, recipient_email, job_data, email_body, resume_path, cover_letter_path):
         try:
             msg = self._prepare_email(
                 recipient_email=recipient_email,
@@ -45,11 +39,7 @@ class EmailSender:
             logging.error(f"Failed to send email: {e}")
             return False
     
-    def _prepare_email(self,
-                      recipient_email: str,
-                      job_data: Dict,
-                      email_body: str,
-                      attachments: List[Tuple[str, str]]) -> MIMEMultipart:
+    def _prepare_email(self, recipient_email, job_data, email_body, attachments):
         position = job_data.get('title')
         
         # Create message container
@@ -84,7 +74,7 @@ class EmailSender:
         
         return msg
     
-    def _send_email(self, msg: MIMEMultipart):
+    def _send_email(self, msg):
         with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
             server.starttls()
             server.login(self.sender_email, self.sender_password)

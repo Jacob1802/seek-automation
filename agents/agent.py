@@ -4,11 +4,11 @@ from typing import Dict
 import re
 
 class AIAgent:
-    def __init__(self, your_name: str):
+    def __init__(self, your_name):
         self.llm = MetaAI()
         self.your_name = your_name
     
-    def prepare_cover_letter(self, job_data: Dict, resume: str, email: str, convert_to_australian_language: bool) -> str:
+    def prepare_cover_letter(self, job_data, resume, email, convert_to_australian_language):
         job_description = job_data.get('content', '').get('sections', '')
         position = job_data.get('title', 'Unknown position')
         company_name = job_data.get('companyProfile', {}).get('name', 'Unknown company')

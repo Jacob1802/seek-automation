@@ -9,7 +9,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
 
-def generate_cover_letter_pdf(cover_letter: str, output_file: str):
+def generate_cover_letter_pdf(cover_letter, output_file):
     # Create a PDF file
     document = SimpleDocTemplate(output_file, pagesize=A4)
 
@@ -37,7 +37,7 @@ def generate_cover_letter_pdf(cover_letter: str, output_file: str):
     document.build(content)
     logging.info(f"{output_file} has been created successfully.")
 
-def format_cover_letter(cover_letter: str):
+def format_cover_letter(cover_letter):
     lines = cover_letter.split("\n")
     formatted_lines = []
     for line in lines:

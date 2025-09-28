@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 class ApplicationPipeline:
-    def __init__(self, run_config: Dict, applied_path: str, smtp_protocol: str):
+    def __init__(self, run_config, applied_path, smtp_protocol):
         self.scraper = JobScraper(run_config)
         self.email_sender = EmailSender(smtp_protocol)
         self.applied_path = Path(applied_path)
@@ -39,14 +39,13 @@ class ApplicationPipeline:
             writer.writeheader()
             writer.writerows([{'email': row[0], 'id': row[1]} for row in self.applied])
 
-    def run(self, resume_txt: str, resume_pdf_path: str, cover_letter_path: str, your_name: str, convert_to_australian_language: bool):
+    def run(self, resume_txt, resume_pdf_path, cover_letter_path, your_name, convert_to_australian_language):
         try:
             logging.info("Scraping job listings...")
             job_data = self.scraper.scrape("websift/seek-job-scraper")
 
             logging.info(f"Found {len(job_data)} jobs with contact information")
 
-            # Process each job and send applications
             for job in job_data:
                 try:
                     job_id = job['id']

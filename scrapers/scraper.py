@@ -12,11 +12,11 @@ logging.basicConfig(
 )
 
 class JobScraper:
-    def __init__(self, run_config: Dict):
+    def __init__(self, run_config):
         self.run_config = run_config
         self.client = ApifyClient(os.getenv("APIFY_KEY"))
         
-    def scrape(self, actor: str) -> List[Dict]:
+    def scrape(self, actor):
         try:
             run = self.client.actor(actor).call(run_input=self.run_config)
             return self._get_dataset(run)
@@ -24,6 +24,6 @@ class JobScraper:
             logging.error(e)
             return [{}]
 
-    def _get_dataset(self, run: Dict) -> List[Dict]:
+    def _get_dataset(self, run):
         data = self.client.dataset(run["defaultDatasetId"]).list_items().items
         return data
