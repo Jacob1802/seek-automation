@@ -42,23 +42,19 @@ class EmailSender:
     def _prepare_email(self, recipient_email, job_data, email_body, attachments):
         position = job_data.get('title')
         
-        # Create message container
         msg = MIMEMultipart()
         msg['From'] = self.sender_email
         msg['To'] = recipient_email
         msg['Subject'] = f"Application for {position}"
         
-        # Attach email body
         msg.attach(MIMEText(email_body, 'plain'))
         
-        # Attach files
         for file_type, file_path in attachments:
             try:
                 part = MIMEBase('application', 'pdf')
                 part.set_payload(Path(file_path).read_bytes())
                 encoders.encode_base64(part)
                 
-                # Set filename based on type
                 filename = os.path.basename(file_path)
                 if not filename.lower().endswith('.pdf'):
                     filename = f"{filename}.pdf"

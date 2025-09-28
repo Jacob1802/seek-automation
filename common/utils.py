@@ -14,18 +14,14 @@ logging.basicConfig(
 )
 
 def generate_cover_letter_pdf(cover_letter, output_file):
-    # Create a PDF file
     document = SimpleDocTemplate(output_file, pagesize=A4)
 
-    # Create styles for the document
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="Body", fontSize=12, leading=15, spaceAfter=8))
     styles.add(ParagraphStyle(name="SectionHeader", fontSize=12, leading=14, spaceAfter=6, spaceBefore=12, fontName="Helvetica-Bold"))
 
-    # Format the cover letter text
     formatted_lines = format_cover_letter(cover_letter)
 
-    # Create the content elements
     content = []
     current_style = styles["Body"]
     for line in formatted_lines:
@@ -35,9 +31,8 @@ def generate_cover_letter_pdf(cover_letter, output_file):
             current_style = styles["Body"]
         content.append(Paragraph(line, current_style))
         if not line.strip():
-            content.append(Spacer(1, 0.2 * inch))  # Add space for empty lines
+            content.append(Spacer(1, 0.2 * inch))
 
-    # Generate PDF
     document.build(content)
     logging.info(f"{output_file} has been created successfully.")
 

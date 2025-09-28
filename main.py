@@ -20,15 +20,14 @@ def main():
         logging.error(f"AssertionError: {e}")
         sys.exit(1)
     
-    resume = extract_text_from_pdf(args.resume_pdf)
+    resume_txt = extract_text_from_pdf(args.resume_pdf)
     run_config = load_json_file(args.config_file)
 
     for search in run_config["searchTerms"]:
         logging.info(f"Performing search for {search}")
-        # Update search term on each iteration
         run_config["searchTerm"] = search
         pipeline = ApplicationPipeline(run_config, args.applied_path, args.smtp_protocol)
-        pipeline.run(resume, args.resume_pdf, args.cover_letter_path, args.first_name, args.australian_language)
+        pipeline.run(resume_txt, args.resume_pdf, args.cover_letter_path, args.first_name, args.australian_language)
 
 if __name__ == "__main__":
     main()
