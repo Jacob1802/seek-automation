@@ -24,7 +24,7 @@ def main():
         sys.exit(1)
     
     resume_txt = extract_text_from_pdf(args.resume_pdf_path)
-    run_config = load_json_file(args.config_file)
+    run_config = load_json_file(args.config_path)
 
     args.resume_txt = resume_txt
     if os.getenv("OPENAI_KEY"):
@@ -37,7 +37,7 @@ def main():
         logging.info(f"Performing search for {search}")
         run_config["searchTerm"] = search
         pipeline = ApplicationPipeline(run_config, args)
-        pipeline.run(args)
+        pipeline.run()
 
 if __name__ == "__main__":
     main()
