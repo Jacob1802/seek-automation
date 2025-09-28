@@ -8,12 +8,12 @@ def add_args():
                         help='Name of the user',
                         required=True)
 
-    parser.add_argument('--resume_pdf', 
+    parser.add_argument('--resume_pdf_path', 
                         type=str,
                         help='Path to resume.pdf file',
                         default="application_materials/resume.pdf")
 
-    parser.add_argument('--config_file', 
+    parser.add_argument('--config_path', 
                         type=str,
                         help='Path to config file',
                         default="config/run_config.json")
@@ -39,4 +39,9 @@ def add_args():
                         help='Convert llm output to australian type language',
                         default=True)
 
+    parser.add_argument('--model', 
+                    type=str,
+                    help='openai gpt model',
+                    default="gpt-4o-mini")
+    
     return parser.parse_args()

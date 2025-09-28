@@ -10,4 +10,5 @@ dependencies = [
     "apify_client",
     "meta_ai_api",
     "pypdf2>=3.0.1",
+    "openai>=1.109.1",
 ]

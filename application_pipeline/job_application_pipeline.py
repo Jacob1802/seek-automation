@@ -1,5 +1,5 @@
-from email_sender.email_sender import EmailSender
 from common.utils import generate_cover_letter_pdf
+from email_sender.email_sender import EmailSender
 from scrapers.scraper import JobScraper
 from agents.agent import AIAgent
 from pathlib import Path
@@ -13,10 +13,12 @@ logging.basicConfig(
 )
 
 class ApplicationPipeline:
-    def __init__(self, run_config, applied_path, smtp_protocol):
+    def __init__(self, run_config, args):
         self.scraper = JobScraper(run_config)
-        self.email_sender = EmailSender(smtp_protocol)
-        self.applied_path = Path(applied_path)
+        self.args = args
+        self.agent = AIAgent(args.first_name, args.model)
+        self.email_sender = EmailSender(args.smtp_protocol)
+        self.applied_path = Path(args.applied_path)
         self.applied = self._load_applied_emails()
     
     def _load_applied_emails(self):
@@ -38,7 +40,7 @@ class ApplicationPipeline:
             writer.writeheader()
             writer.writerows([{'email': row[0], 'id': row[1]} for row in self.applied])
 
-    def run(self, resume_txt, resume_pdf_path, cover_letter_path, your_name, convert_to_australian_language):
+    def run(self):
         try:
             logging.info("Scraping job listings...")
             job_data = self.scraper.scrape("websift/seek-job-scraper")
@@ -48,7 +50,9 @@ class ApplicationPipeline:
             for job in job_data:
                 try:
                     job_id = job['id']
-                    self.agent = AIAgent(your_name)
+                    # Re init agent if using meta ai to avoid limit context window issues
+                    if not self.args.use_openai:
+                        self.agent = AIAgent(self.args.first_name)
                     
                     applied_emails = [item[0] for item in self.applied]
                     position = job.get('title', '')
@@ -57,17 +61,17 @@ class ApplicationPipeline:
                         if email in applied_emails:
                             continue
 
-                        cover_letter = self.agent.prepare_cover_letter(job, resume_txt, email, convert_to_australian_language)
+                        cover_letter = self.agent.prepare_cover_letter(job, self.args.resume_txt, email, self.args.australian_language)
                         msg = self.agent.write_email_contents()
 
-                        generate_cover_letter_pdf(cover_letter, cover_letter_path)
+                        generate_cover_letter_pdf(cover_letter, self.args.cover_letter_path)
 
                         success = self.email_sender.send_application(
                             email,
                             job,
                             msg,
-                            resume_pdf_path,
-                            cover_letter_path
+                            self.args.resume_pdf_path,
+                            self.args.cover_letter_path
                         )
                         if success:
                             logging.info(f"Successfully processed application to {email} for {position}, {job_id}")

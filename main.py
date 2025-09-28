@@ -1,10 +1,13 @@
 from application_pipeline.job_application_pipeline import ApplicationPipeline
 from common.utils import load_json_file, extract_text_from_pdf
 from config.args import add_args
+from dotenv import load_dotenv
 from pathlib import Path
 import logging
-import json
 import sys
+import os
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,20 +17,27 @@ logging.basicConfig(
 def main():
     args = add_args()
     try:
-        assert Path(args.resume_pdf).exists() == True, f"resume.pdf not found in {args.resume_pdf}"
-        assert Path(args.config_file).exists() == True, f"config not found in {args.config_file}"
+        assert Path(args.resume_pdf_path).exists() == True, f"resume.pdf not found in {args.resume_pdf_path}"
+        assert Path(args.config_path).exists() == True, f"config not found in {args.config_path}"
     except AssertionError as e:
         logging.error(f"AssertionError: {e}")
         sys.exit(1)
     
-    resume_txt = extract_text_from_pdf(args.resume_pdf)
+    resume_txt = extract_text_from_pdf(args.resume_pdf_path)
     run_config = load_json_file(args.config_file)
+
+    args.resume_txt = resume_txt
+    if os.getenv("OPENAI_KEY"):
+        args.use_openai = True
+    else:
+        args.use_openai = False
+        logging.warning("No openai api found defaulting to meta api")
 
     for search in run_config["searchTerms"]:
         logging.info(f"Performing search for {search}")
         run_config["searchTerm"] = search
-        pipeline = ApplicationPipeline(run_config, args.applied_path, args.smtp_protocol)
-        pipeline.run(resume_txt, args.resume_pdf, args.cover_letter_path, args.first_name, args.australian_language)
+        pipeline = ApplicationPipeline(run_config, args)
+        pipeline.run(args)
 
 if __name__ == "__main__":
     main()
