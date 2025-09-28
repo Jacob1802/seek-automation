@@ -51,11 +51,10 @@ class ApplicationPipeline:
 
         return sim_score
 
-    def run(self):
+    async def run(self):
         try:
             logging.info("Scraping job listings...")
             job_data = self.scraper.scrape("websift/seek-job-scraper")
-
             logging.info(f"Found {len(job_data)} jobs with contact information")
 
             for job in job_data:

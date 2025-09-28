@@ -4,6 +4,7 @@ from config.args import add_args
 from dotenv import load_dotenv
 from pathlib import Path
 import logging
+import asyncio
 import sys
 import os
 
@@ -14,7 +15,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
 
-def main():
+async def main():
     args = add_args()
     try:
         assert Path(args.resume_pdf_path).exists() == True, f"resume.pdf not found in {args.resume_pdf_path}"
@@ -33,11 +34,8 @@ def main():
         args.use_openai = False
         logging.warning("No openai api found defaulting to meta api")
 
-    for search in run_config["searchTerms"]:
-        logging.info(f"Performing search for {search}")
-        run_config["searchTerm"] = search
-        pipeline = ApplicationPipeline(run_config, args)
-        pipeline.run()
+    pipeline = ApplicationPipeline(run_config, args)
+    await pipeline.run()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

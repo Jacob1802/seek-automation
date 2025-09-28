@@ -1,8 +1,8 @@
 
-from apify_client import ApifyClient
+from apify_client import ApifyClientAsync
 from dotenv import load_dotenv
-from typing import Dict, List
 import logging
+import asyncio
 import os
 load_dotenv()
 
@@ -14,16 +14,28 @@ logging.basicConfig(
 class JobScraper:
     def __init__(self, run_config):
         self.run_config = run_config
-        self.client = ApifyClient(os.getenv("APIFY_KEY"))
+        self.client = ApifyClientAsync(os.getenv("APIFY_KEY"))
         
-    def scrape(self, actor):
+    async def scrape(self, actor):
         try:
-            run = self.client.actor(actor).call(run_input=self.run_config)
-            return self._get_dataset(run)
+            all_data = []
+            tasks = []
+            for query in self.run_config['searchTerms']:
+                config = {k: v for k, v in self.run_config.items() if k != 'searchTerms'}
+                config['searchTerm'] = query
+                tasks.append(self.client.actor(actor).call(run_input=config))
+            
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            for response in responses:
+                if isinstance(response, Exception):
+                    continue
+                all_data.extend(await self._get_dataset(response))
+
+            return all_data
         except Exception as e:
             logging.error(e)
-            return [{}]
+            return []
 
-    def _get_dataset(self, run):
-        data = self.client.dataset(run["defaultDatasetId"]).list_items().items
-        return data
+    async def _get_dataset(self, run):
+        data = await self.client.dataset(run["defaultDatasetId"]).list_items()
+        return data.items
