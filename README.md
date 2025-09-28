@@ -12,7 +12,7 @@ This project automates the process of applying for jobs by scraping job listings
 ## Setup Requirements
 
 1. **Apify API Key**  
-   - Create an Apify account and obtain an API key for the Seek Job Scraper.
+   - Create an [Apify account](https://console.apify.com/) and obtain an [API key](https://console.apify.com/settings/integrations) for the Seek Job Scraper.
    - Store the API key in an `.env` file as `APIFY_KEY`.
 
 2. **Mail App Password**  
@@ -21,8 +21,11 @@ This project automates the process of applying for jobs by scraping job listings
 
 3. **Resume Preparation**  
    - Create the following files:
-     - `application_materials/resume.txt`: A plain-text version of your resume, used for AI-generated content.
-     - `application_materials/resume.pdf`: A PDF version of your resume, attached to job applications.
+     - `application_pipeline/application_materials/resume.pdf`: A PDF version of your resume, attached to job applications.
+
+4. **Apify API Key** (optional)
+   - Create an [OpenAI account](https://platform.openai.com/) and obtain an [API key](https://platform.openai.com/settings/organization/api-keys).
+   - Store the API key in an `.env` file as `OPENAI_KEY`.
 
 ## How to Use
 
@@ -34,11 +37,12 @@ This project automates the process of applying for jobs by scraping job listings
 2. **Copy .env.example to .env & edit .env**:
     ```bash
     APIFY_KEY=<Your Apify API Key>
+    OPENAI_KEY=<Your Openai API Key>
     SENDER_MAIL=<Your Mail Address>
     SENDER_PASSWORD=<Your Mail App Password>
     ```
 4. **Prepare your resume files**:
-    - Ensure `resume.txt` and `resume.pdf` exist in the `application_materials` directory.
+    - Ensure `resume.pdf` exist in the `application_pipeline/application_materials` directory.
 5. **Install uv**
     ```bash
     pip install uv
@@ -59,14 +63,14 @@ This project automates the process of applying for jobs by scraping job listings
  - For custom logic beyond the actor's capabilities, modify the `run()` method in `application_pipeline/job_application_pipeline.py`.
 
 ## Optional Arguments
- - `--resume_txt:` Custom resume text path
  - `--resume_pdf`: Custom resume PDF path
  - `--config_file`: Custom config file path
  - `--cover_letter_path`: Custom cover letter save location
  - `--smtp_protocol`: Custom SMTP server
  - `--australian_language`: Toggle Australian English e.g prompt llm to convert ize words to ise (default: True)
+ - `--model`: The openai model you wish to use
 
 ## Notes
  - Ensure your mail account has secure app access enabled or app-specific passwords configured.
- - Applications are tracked in `application_materials/applied.csv` to avoid sending duplicates.
+ - Applications are tracked in `application_pipeline/application_materials/applied.csv` to avoid sending duplicates.
  - Using other llms official APIs such as Openai or Claude would likely improve performance such as speed & higher quality responses.

@@ -11,7 +11,7 @@ def add_args():
     parser.add_argument('--resume_pdf_path', 
                         type=str,
                         help='Path to resume.pdf file',
-                        default="application_materials/resume.pdf")
+                        default="application_pipeline/application_materials/resume.pdf")
 
     parser.add_argument('--config_path', 
                         type=str,
@@ -21,12 +21,12 @@ def add_args():
     parser.add_argument('--cover_letter_path', 
                         type=str,
                         help='Path to save cover letter too',
-                        default="application_materials/cover_letter.pdf")
+                        default="application_pipeline/application_materials/cover_letter.pdf")
     
     parser.add_argument('--applied_path', 
                         type=str,
                         help='Path to save applied jobs to',
-                        default="application_materials/applied.csv")
+                        default="application_pipeline/application_materials/applied.csv")
 
     parser.add_argument('--smtp_protocol', 
                         type=str,
