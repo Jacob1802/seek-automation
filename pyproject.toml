@@ -11,4 +11,6 @@ dependencies = [
     "meta_ai_api",
     "pypdf2>=3.0.1",
     "openai>=1.109.1",
+    "scipy>=1.16.2",
+    "sentence-transformers>=5.1.1",
 ]
