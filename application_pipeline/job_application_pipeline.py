@@ -1,7 +1,7 @@
 from common.utils import generate_cover_letter_pdf
 from email_sender.email_sender import EmailSender
 from scrapers.scraper import JobScraper
-from agents.agent import AIAgent
+from integrations.agent import AIAgent
 from pathlib import Path
 import logging
 import time
