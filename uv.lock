@@ -351,6 +351,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pypdf2"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/bb/18dc3062d37db6c491392007dfd1a7f524bb95886eb956569ac38a23a784/PyPDF2-3.0.1.tar.gz", hash = "sha256:a74408f69ba6271f71b9352ef4ed03dc53a31aa404d29b5d31f53bfecfee1440", size = 227419, upload_time = "2022-12-31T10:36:13.13Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/5e/c86a5643653825d3c913719e788e41386bee415c2b87b4f955432f2de6b2/pypdf2-3.0.1-py3-none-any.whl", hash = "sha256:d16e4205cfee272fbdc0568b68d82be796540b1537508cef59388f839c191928", size = 232572, upload_time = "2022-12-31T10:36:10.327Z" },
+]
+
+[[package]]
 name = "pyppeteer"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -443,6 +452,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "apify-client" },
     { name = "meta-ai-api" },
+    { name = "pypdf2" },
     { name = "python-dotenv" },
     { name = "reportlab" },
 ]
@@ -451,6 +461,7 @@ dependencies = [
 requires-dist = [
     { name = "apify-client" },
     { name = "meta-ai-api" },
+    { name = "pypdf2", specifier = ">=3.0.1" },
     { name = "python-dotenv" },
     { name = "reportlab" },
 ]

@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["python-dotenv", "reportlab", "apify_client", "meta_ai_api"]
+dependencies = [
+    "python-dotenv",
+    "reportlab",
+    "apify_client",
+    "meta_ai_api",
+    "pypdf2>=3.0.1",
+]

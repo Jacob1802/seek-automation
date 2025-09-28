@@ -1,4 +1,5 @@
 from application_pipeline.job_application_pipeline import ApplicationPipeline
+from common.utils import load_json_file, extract_text_from_pdf
 from config.args import add_args
 from pathlib import Path
 import logging
@@ -14,18 +15,13 @@ def main():
     args = add_args()
     try:
         assert Path(args.resume_pdf).exists() == True, f"resume.pdf not found in {args.resume_pdf}"
-        assert Path(args.resume_txt).exists() == True, f"resume.txt not found in {args.resume_txt}"
         assert Path(args.config_file).exists() == True, f"config not found in {args.config_file}"
     except AssertionError as e:
         logging.error(f"AssertionError: {e}")
         sys.exit(1)
     
-    try:
-        resume = Path(args.resume_txt).read_text()
-        run_config = json.loads(Path(args.config_file).read_bytes())
-    except Exception as e:
-        logging.error(e)
-        sys.exit(1)
+    resume = extract_text_from_pdf(args.resume_pdf)
+    run_config = load_json_file(args.config_file)
 
     for search in run_config["searchTerms"]:
         logging.info(f"Performing search for {search}")

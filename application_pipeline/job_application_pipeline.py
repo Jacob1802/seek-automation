@@ -3,7 +3,6 @@ from common.utils import generate_cover_letter_pdf
 from scrapers.scraper import JobScraper
 from agents.agent import AIAgent
 from pathlib import Path
-from typing import Dict
 import logging
 import time
 import csv

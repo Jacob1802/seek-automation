@@ -2,7 +2,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.units import inch
+from PyPDF2 import PdfReader
+from pathlib import Path
 import logging
+import json
+import sys
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,3 +54,25 @@ def format_cover_letter(cover_letter):
             if line.strip():
                 formatted_lines.append(line.strip())
     return formatted_lines
+
+def extract_text_from_pdf(pdf_path):
+    try:
+        reader = PdfReader(pdf_path)
+        text = ""
+
+        for page in reader.pages:
+            if page.extract_text():
+                text += page.extract_text()
+        
+        return text.strip()
+    except Exception as e:
+        logging.error(f"Error converting pdf to text {e}")
+        sys.exit(1)
+
+def load_json_file(file_path):
+    file = Path(file_path)
+    if not file.exists():
+        logging.error(f"Error file {file_path} does not exist")
+        sys.exit(1)
+    
+    return json.loads(file.read_bytes())

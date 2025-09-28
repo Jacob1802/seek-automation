@@ -7,11 +7,6 @@ def add_args():
                         type=str, 
                         help='Name of the user',
                         required=True)
-    
-    parser.add_argument('--resume_txt', 
-                        type=str,
-                        help='Path to resume.txt file',
-                        default="application_materials/resume.txt")
 
     parser.add_argument('--resume_pdf', 
                         type=str,

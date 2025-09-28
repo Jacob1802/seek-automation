@@ -1,6 +1,5 @@
 
 from meta_ai_api import MetaAI
-from typing import Dict
 import re
 
 class AIAgent:
