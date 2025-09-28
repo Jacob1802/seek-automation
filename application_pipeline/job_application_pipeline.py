@@ -1,5 +1,8 @@
+
+from sentence_transformers import SentenceTransformer
 from common.utils import generate_cover_letter_pdf
 from email_sender.email_sender import EmailSender
+from scipy.spatial.distance import cosine
 from scrapers.scraper import JobScraper
 from integrations.agent import AIAgent
 from pathlib import Path
@@ -20,6 +23,8 @@ class ApplicationPipeline:
         self.email_sender = EmailSender(args.smtp_protocol)
         self.applied_path = Path(args.applied_path)
         self.applied = self._load_applied_emails()
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.encoded_resume_txt = self.model.encode(self.args.resume_txt, convert_to_numpy=True)
     
     def _load_applied_emails(self):
         if not self.applied_path.exists():
@@ -40,6 +45,12 @@ class ApplicationPipeline:
             writer.writeheader()
             writer.writerows([{'email': row[0], 'id': row[1]} for row in self.applied])
 
+    def calculate_resume_jd_similarity(self, jd_text):
+        jd_vector = self.model.encode(jd_text, convert_to_numpy=True)
+        sim_score = 1 - cosine(self.encoded_resume_txt, jd_vector)
+
+        return sim_score
+
     def run(self):
         try:
             logging.info("Scraping job listings...")
@@ -56,7 +67,16 @@ class ApplicationPipeline:
                     
                     applied_emails = [item[0] for item in self.applied]
                     position = job.get('title', '')
+                    raw_content = job.get('content', {})
+                    job_description = raw_content.get('sections')
+                    if not job_description:
+                        logging.warning("No job description found")
+                        continue
                     
+                    score = self.calculate_resume_jd_similarity(" ".join(job_description))
+                    if score < 0.4:
+                        continue
+
                     for email in job['emails']:
                         if email in applied_emails:
                             continue
@@ -78,12 +98,13 @@ class ApplicationPipeline:
                             self.applied.append([email, job_id])
                         else:
                             raise RuntimeError(f"Email sending failed for job application: {position}, Job ID: {job_id}")
-
                         
                 except Exception as e:
                     logging.error(f"Error processing job application: {e}")
                 # Wait 30sec to not overload api can be removed if using official apis
-                time.sleep(30)
+                if not self.args.use_openai:
+                    logging.info('sleeping')
+                    time.sleep(30)
 
         except Exception as e:
             logging.error(f"Error {e}")
