@@ -79,7 +79,7 @@ class SeekClient:
             auth_code = self._parse_auth_code(response.url)
 
             if not auth_code:
-                logging.info("Authorization code not found, cannot proceed to Step 8.")
+                logging.error("Authorization code not found, cannot proceed")
                 return
             
             json_data = {
@@ -91,7 +91,6 @@ class SeekClient:
 
             response = session.post('https://login.seek.com/oauth/token', json=json_data)
             data = response.json()
-            logging.info(data)
             bearer = data['access_token']
 
             # TODO: save tokens
