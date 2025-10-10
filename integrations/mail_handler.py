@@ -75,7 +75,7 @@ class MailClient:
         return msg
     
     def _send_email(self, msg):
-        with smtplib.SMTP(self.mail_protocol, self.smtp_port) as server:
+        with smtplib.SMTP(f'smtp.{self.mail_protocol}', self.smtp_port) as server:
             server.starttls()
             server.login(self.user_email, self.app_password)
             server.send_message(msg)

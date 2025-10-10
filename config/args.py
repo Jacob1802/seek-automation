@@ -28,10 +28,10 @@ def add_args():
                         help='Path to save applied jobs to',
                         default="application_pipeline/application_materials/applied.csv")
 
-    parser.add_argument('--smtp_protocol', 
+    parser.add_argument('--mail_protocol', 
                         type=str,
                         help='Protocol to send mail',
-                        default="smtp.gmail.com")
+                        default="gmail.com")
 
     # This is set to True by default as seeks largest english userbase is Australia & NZ
     parser.add_argument('--australian_language', 
