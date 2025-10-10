@@ -1,7 +1,11 @@
 from integrations.mail_handler import MailClient
 from urllib.parse import urlparse, parse_qs
 from curl_cffi import requests
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,12 +41,13 @@ class SeekClient:
             'x-request-language': 'en-au',
         }
 
+        user_email = os.getenv("EMAIL_ADDRESS")
         with requests.Session(impersonate="chrome", headers=headers, allow_redirects=True) as session:
             json_data = {
                 'client_id': CLIENTID,
                 'connection': 'email',
                 'send': 'link',
-                'email': 'os.getenv("EMAIL_ADDRESS")',
+                'email': user_email,
                 'authParams': {
                     'response_type': 'code',
                     'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
@@ -56,10 +61,10 @@ class SeekClient:
             json_data = {
                 'connection': 'email',
                 'verification_code': code,
-                'email': 'os.getenv("EMAIL_ADDRESS")',
+                'email': user_email,
                 'client_id': CLIENTID,
             }
-            # login
+
             response = session.post('https://login.seek.com/passwordless/verify', json=json_data)
             params = {
                 'client_id': CLIENTID,
@@ -71,7 +76,7 @@ class SeekClient:
                 'protocol': 'oauth2',
                 'connection': 'email',
                 'verification_code': code,
-                'email': 'os.getenv("EMAIL_ADDRESS")',
+                'email': user_email,
                 'auth0Client': AUTH0_CLIENT,
             }
             
@@ -91,6 +96,7 @@ class SeekClient:
 
             response = session.post('https://login.seek.com/oauth/token', json=json_data)
             data = response.json()
+            logging.info(data)
             bearer = data['access_token']
 
             # TODO: save tokens
