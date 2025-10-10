@@ -1,7 +1,7 @@
 
 from sentence_transformers import SentenceTransformer
 from common.utils import generate_cover_letter_pdf
-from email_sender.email_sender import EmailSender
+from integrations.mail_handler import MailClient
 from scipy.spatial.distance import cosine
 from scrapers.scraper import JobScraper
 from integrations.agent import AIAgent
@@ -20,7 +20,7 @@ class ApplicationPipeline:
         self.scraper = JobScraper(run_config)
         self.args = args
         self.agent = AIAgent(args.first_name, args.model)
-        self.email_sender = EmailSender(args.smtp_protocol)
+        self.email_sender = MailClient(args.smtp_protocol)
         self.applied_path = Path(args.applied_path)
         self.applied = self._load_applied_emails()
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
