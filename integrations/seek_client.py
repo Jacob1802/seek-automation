@@ -21,7 +21,7 @@ class SeekClient:
     SEEK_LOGIN_SENDER = "noreply@seek.com.au"
     USER_EMAIL = os.getenv("EMAIL_ADDRESS")
 
-    def __init__(self, mail_client: MailClient):
+    def __init__(self, mail_client):
         self.mail_client = mail_client
     
     def __enter__(self):
@@ -172,9 +172,10 @@ class SeekClient:
 
             response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
             response.raise_for_status()
-            logging.info(f"successfully applied to job {job_id}")
+            return True
         except Exception as e:
             logging.error(f"Error during job application: {e}")
+            return False
 
     def _upload_attachment(self, type, file_path):
         try:
