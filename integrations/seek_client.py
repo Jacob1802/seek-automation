@@ -145,6 +145,8 @@ class SeekClient:
         try:
             resume_uri = self._upload_attachment('Resume', resume_path)
             cover_letter_uri = self._upload_attachment('CoverLetter', cover_letter_path)
+            recent_role = self.get_most_recent_role()
+
             json_data = [
                 {
                     'operationName': 'ApplySubmitApplication',
@@ -160,8 +162,7 @@ class SeekClient:
                             'coverLetter': {
                                 'uri': cover_letter_uri,
                             },
-                            'mostRecentRole': {
-                            },
+                            'mostRecentRole': recent_role
                         },
                         'locale': 'en-AU',
                     },
@@ -276,6 +277,7 @@ class SeekClient:
             ]
 
             response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            # TODO: check response for errors as status always seems to be 200
             response.raise_for_status()
             data = response.json()
             questions = data[0]['data']['jobApplicationProcess']['questionnaire']['questions']
@@ -287,6 +289,40 @@ class SeekClient:
         except Exception as e:
             logging.error(f"Error during role requirements handling: {e}")
 
+    def get_most_recent_role(self):
+        try:
+            json_data = [
+                {
+                    'operationName': 'GetRoles',
+                    'variables': {},
+                    'query': 'query GetRoles {\n  viewer {\n    _id\n    roles {\n      ...role\n      __typename\n    }\n    yearsOfExperience {\n      newToWorkforce\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment role on Role {\n  id\n  title {\n    text\n    ontologyId\n    __typename\n  }\n  company {\n    text\n    ontologyId\n    __typename\n  }\n  seniority {\n    text\n    ontologyId\n    __typename\n  }\n  from {\n    year\n    month\n    __typename\n  }\n  to {\n    year\n    month\n    __typename\n  }\n  achievements\n  tracking {\n    events {\n      key\n      value\n      __typename\n    }\n    __typename\n  }\n  __typename\n}',
+                }
+            ]
+
+            response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            response.raise_for_status()
+            # TODO: check response for errors as status always seems to be 200
+            data = response.json()
+            roles = data[0]['data']['viewer']['roles']
+            if roles:
+                most_recent_role = {
+                    'company': roles[0]['company']['text'] if roles[0]['company'] else '',
+                    'title': roles[0]['title']['text'] if roles[0]['title'] else '',
+                    'started': {
+                        "year": roles[0]['from']['year'] if roles[0]['from'] else '',
+                        "month": roles[0]['from']['month'] if roles[0]['from'] else '',
+                    },
+                }
+                if roles[0]['to']:
+                    most_recent_role['finished'] = {
+                        "year": roles[0]['to']['year'] if roles[0]['to'] else '',
+                        "month": roles[0]['to']['month'] if roles[0]['to'] else '',
+                    }
+                return most_recent_role
+            return {}
+        except Exception as e:
+            logging.error(f"Error fetching most recent role: {e}")
+    
 if __name__ == "__main__":
     mail_client = MailClient("gmail.com")
     with SeekClient(mail_client) as seek_client:
