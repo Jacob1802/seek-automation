@@ -260,6 +260,32 @@ class SeekClient:
             },
         ]
         return json_data
+    
+    def handle_role_requirements(self, job_id):
+        try:
+            json_data = [
+                {
+                    'operationName': 'GetJobApplicationProcess',
+                    'variables': {
+                        'jobId': job_id,
+                        'isAuthenticated': True,
+                        'locale': 'en-AU',
+                    },
+                    'query': 'query GetJobApplicationProcess($jobId: ID!, $isAuthenticated: Boolean!, $locale: Locale!) {\n  jobApplicationProcess(jobId: $jobId) {\n    ...LocationFragment\n    ...ClassificationFragment\n    ...DocumentsFragment\n    ...QuestionnaireFragment\n    job {\n      ...JobFragment\n      __typename\n    }\n    linkOut\n    extractedRoleTitles\n    __typename\n  }\n}\n\nfragment LocationFragment on JobApplicationProcess {\n  location {\n    id\n    name\n    __typename\n  }\n  state {\n    id\n    __typename\n  }\n  area {\n    id\n    name\n    __typename\n  }\n  __typename\n}\n\nfragment ClassificationFragment on JobApplicationProcess {\n  classification {\n    id\n    name\n    subClassification {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DocumentsFragment on JobApplicationProcess {\n  documents {\n    lastAppliedResumeIdPrefill @include(if: $isAuthenticated)\n    selectionCriteriaRequired\n    lastWrittenCoverLetter @include(if: $isAuthenticated) {\n      content\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment QuestionnaireFragment on JobApplicationProcess {\n  questionnaire {\n    questions @include(if: $isAuthenticated) {\n      id\n      text\n      __typename\n      ... on SingleChoiceQuestion {\n        lastAnswer {\n          id\n          text\n          uri\n          __typename\n        }\n        options {\n          id\n          text\n          uri\n          __typename\n        }\n        __typename\n      }\n      ... on MultipleChoiceQuestion {\n        lastAnswers {\n          id\n          text\n          uri\n          __typename\n        }\n        options {\n          id\n          text\n          uri\n          __typename\n        }\n        __typename\n      }\n      ... on PrivacyPolicyQuestion {\n        url\n        options {\n          id\n          text\n          uri\n          __typename\n        }\n        __typename\n      }\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment JobFragment on Job {\n  id\n  createdAt {\n    shortLabel\n    __typename\n  }\n  content\n  title\n  advertiser {\n    id\n    name(locale: $locale)\n    __typename\n  }\n  abstract\n  source\n  products {\n    branding {\n      id\n      logo {\n        url\n        __typename\n      }\n      __typename\n    }\n    displayTags {\n      label(locale: $locale)\n      __typename\n    }\n    __typename\n  }\n  tracking {\n    isPrivateAdvertiser\n    hasRoleRequirements\n    __typename\n  }\n  __typename\n}',
+                },
+            ]
+
+            response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            response.raise_for_status()
+            data = response.json()
+            questions = data[0]['data']['jobApplicationProcess']['questionnaire']['questions']
+            options = {}
+            for question in questions:
+                options[f"{question['id']--question['text']}"] = [(option['id'], option['text']) for option in question.get('options', [])]
+            
+
+        except Exception as e:
+            logging.error(f"Error during role requirements handling: {e}")
 
 if __name__ == "__main__":
     mail_client = MailClient("gmail.com")
