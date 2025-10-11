@@ -1,6 +1,6 @@
 from integrations.mail_handler import MailClient
 from urllib.parse import urlparse, parse_qs
-from curl_cffi import requests
+from curl_cffi import requests, CurlMime
 from dotenv import load_dotenv
 import logging
 import uuid
@@ -141,8 +141,10 @@ class SeekClient:
             return auth_code
         return
 
-    def apply(self, job_id):
+    def apply(self, job_id, resume_path, cover_letter_path):
         try:
+            resume_uri = self._upload_attachment('Resume', resume_path)
+            cover_letter_uri = self._upload_attachment('CoverLetter', cover_letter_path)
             json_data = [
                 {
                     'operationName': 'ApplySubmitApplication',
@@ -153,6 +155,10 @@ class SeekClient:
                             'zone': 'anz-1',
                             'profilePrivacyLevel': 'Standard',
                             'resume': {
+                                'uri': resume_uri,
+                            },
+                            'coverLetter': {
+                                'uri': cover_letter_uri,
                             },
                             'mostRecentRole': {
                             },
@@ -169,6 +175,91 @@ class SeekClient:
         except Exception as e:
             logging.error(f"Error during job application: {e}")
 
+    def _upload_attachment(self, type, file_path):
+        try:
+            mp = CurlMime()
+            json_data = [
+                {
+                    'operationName': 'GetDocumentUploadData',
+                    'variables': {
+                        'id': str(uuid.uuid4()),
+                    },
+                    'query': 'query GetDocumentUploadData($id: UUID!) {\n  viewer {\n    documentUploadFormData(id: $id) {\n      link\n      key\n      formFields {\n        key\n        value\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}',
+                },
+            ]
+
+            response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            response.raise_for_status()
+            response_data = response.json()
+            link = response_data[0]['data']['viewer']['documentUploadFormData']['link']
+            uuid_key = response_data[0]['data']['viewer']['documentUploadFormData']['key']
+            for item in response_data[0]['data']['viewer']['documentUploadFormData']['formFields']:
+                mp.addpart(name=item['key'], data=item['value'])
+                    
+            mp.addpart(
+                name="file",
+                content_type="application/pdf",
+                filename=file_path,
+                local_path=file_path,
+            )
+
+            response = self.session.post(
+                link,
+                multipart=mp,
+                impersonate="chrome",
+            )
+            response.raise_for_status()
+            time.sleep(5) # Wait for S3 to process the upload
+            if type == "CoverLetter":
+                json_data = self._process_cover_letter(uuid_key)
+            elif type == "Resume":
+                json_data = self._process_resume(uuid_key)
+            else:
+                raise ValueError("Invalid attachment type")
+            
+            response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            response.raise_for_status()
+            data = response.json()
+            uri = data[0]['data']['processUploadedAttachment']['uri']
+            return uri
+        except Exception as e:
+            logging.error(f"Error during attachment upload: {e}")
+        finally:
+            mp.close()
+
+    def _process_resume(self, uuid_key):
+        json_data = [
+            {
+                'operationName': 'ApplyProcessUploadedResume',
+                'variables': {
+                    'input': {
+                        'id': uuid_key,
+                        'isDefault': False,
+                        'parsingContext': {
+                            'id': str(uuid.uuid4()),
+                        },
+                        'zone': 'anz-1',
+                    },
+                },
+                'query': 'mutation ApplyProcessUploadedResume($input: ProcessUploadedResumeInput!) {\n  processUploadedResume(input: $input) {\n    resume {\n      ...resume\n      __typename\n    }\n    viewer {\n      _id\n      resumes {\n        ...resume\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment resume on Resume {\n  id\n  createdDateUtc\n  isDefault\n  fileMetadata {\n    name\n    size\n    virusScanStatus\n    sensitiveDataInfo {\n      isDetected\n      __typename\n    }\n    uri\n    __typename\n  }\n  origin {\n    type\n    __typename\n  }\n  __typename\n}',
+            },
+        ]
+        return json_data
+
+    def _process_cover_letter(self, uuid_key):
+        json_data = [
+            {
+                'operationName': 'ApplyProcessUploadedAttachment',
+                'variables': {
+                    'input': {
+                        'id': uuid_key,
+                        'attachmentType': "CoverLetter",
+                    },
+                },
+                'query': 'mutation ApplyProcessUploadedAttachment($input: ProcessUploadedAttachmentInput!) {\n  processUploadedAttachment(input: $input) {\n    uri\n    __typename\n  }\n}',
+            },
+        ]
+        return json_data
 
 if __name__ == "__main__":
     mail_client = MailClient("gmail.com")
