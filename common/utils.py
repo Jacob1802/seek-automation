@@ -68,6 +68,14 @@ def load_json_file(file_path):
     file = Path(file_path)
     if not file.exists():
         logging.error(f"Error file {file_path} does not exist")
-        sys.exit(1)
+        return {}
     
     return json.loads(file.read_bytes())
+
+def write_json_file(file_path, data):
+    file = Path(file_path)
+    try:
+        with file.open('w') as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        logging.error(f"Error writing to file {file_path}: {e}")    
