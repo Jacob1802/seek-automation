@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 from curl_cffi import requests
 from dotenv import load_dotenv
 import logging
+import uuid
 import time
 import os
 
@@ -113,6 +114,7 @@ class SeekClient:
             self.access_token = data.get('access_token')
             self.refresh_token = data.get('refresh_token')
             self.token_expiry = time.time() + data.get('expires_in', 0)
+            self.session.headers.update({'authorization': f'Bearer {self.access_token}'})
 
         except Exception as e:
             logging.error(f"Error during login: {e}")
@@ -138,6 +140,34 @@ class SeekClient:
             auth_code = params.get('code', [None])[0]
             return auth_code
         return
+
+    def apply(self, job_id):
+        try:
+            json_data = [
+                {
+                    'operationName': 'ApplySubmitApplication',
+                    'variables': {
+                        'input': {
+                            'jobId': job_id,
+                            'correlationId': str(uuid.uuid4()),
+                            'zone': 'anz-1',
+                            'profilePrivacyLevel': 'Standard',
+                            'resume': {
+                            },
+                            'mostRecentRole': {
+                            },
+                        },
+                        'locale': 'en-AU',
+                    },
+                    'query': 'mutation ApplySubmitApplication($input: SubmitApplicationInput!, $locale: Locale) {\n  submitApplication(input: $input) {\n    ... on SubmitApplicationSuccess {\n      applicationId\n      __typename\n    }\n    ... on SubmitApplicationFailure {\n      errors {\n        message(locale: $locale)\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}',
+                },
+            ]
+
+            response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            response.raise_for_status()
+            logging.info(f"successfully applied to job {job_id}")
+        except Exception as e:
+            logging.error(f"Error during job application: {e}")
 
 
 if __name__ == "__main__":
