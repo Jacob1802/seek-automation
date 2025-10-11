@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 from curl_cffi import requests
 from dotenv import load_dotenv
 import logging
+import time
 import os
 
 load_dotenv()
@@ -12,20 +13,21 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
 
-AUTH0_CLIENT = 'eyJuYW1lIjoiYXV0aDAuanMiLCJ2ZXJzaW9uIjoiOS4yOC4wIn0='
-CLIENTID = "yGBVge66K5NJpSN5u71fU90VcTlEASNu"
-SEEK_LOGIN_SENDER = "noreply@seek.com.au"
 
 class SeekClient:
+    AUTH0_CLIENT = 'eyJuYW1lIjoiYXV0aDAuanMiLCJ2ZXJzaW9uIjoiOS4yOC4wIn0='
+    CLIENT_ID = "yGBVge66K5NJpSN5u71fU90VcTlEASNu"
+    SEEK_LOGIN_SENDER = "noreply@seek.com.au"
+    USER_EMAIL = os.getenv("EMAIL_ADDRESS")
+
     def __init__(self, mail_client: MailClient):
         self.mail_client = mail_client
-
-
-    def login(self):
+    
+    def __enter__(self):
         headers = {
             'accept': '*/*',
             'accept-language': 'en-US,en;q=0.6',
-            'auth0-client': AUTH0_CLIENT,
+            'auth0-client': self.AUTH0_CLIENT,
             'content-type': 'application/json',
             'origin': 'https://login.seek.com',
             'priority': 'u=1, i',
@@ -41,65 +43,85 @@ class SeekClient:
             'x-request-language': 'en-au',
         }
 
-        user_email = os.getenv("EMAIL_ADDRESS")
-        with requests.Session(impersonate="chrome", headers=headers, allow_redirects=True) as session:
-            json_data = {
-                'client_id': CLIENTID,
-                'connection': 'email',
-                'send': 'link',
-                'email': user_email,
-                'authParams': {
-                    'response_type': 'code',
-                    'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
-                    'scope': 'openid profile email offline_access',
-                    'audience': 'https://seek/api/candidate',
-                },
-            }
+        self.session = requests.Session(impersonate="chrome", headers=headers, allow_redirects=True)
+        return self
 
-            response = session.post('https://login.seek.com/passwordless/start', json=json_data)
-            code = self.mail_client.fetch_code(SEEK_LOGIN_SENDER)
-            json_data = {
-                'connection': 'email',
-                'verification_code': code,
-                'email': user_email,
-                'client_id': CLIENTID,
-            }
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session.close()
 
-            response = session.post('https://login.seek.com/passwordless/verify', json=json_data)
-            params = {
-                'client_id': CLIENTID,
+    def login(self):
+        json_data = {
+            'client_id': self.CLIENT_ID,
+            'connection': 'email',
+            'send': 'link',
+            'email': self.USER_EMAIL,
+            'authParams': {
                 'response_type': 'code',
                 'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
                 'scope': 'openid profile email offline_access',
                 'audience': 'https://seek/api/candidate',
-                '_intstate': 'deprecated',
-                'protocol': 'oauth2',
-                'connection': 'email',
-                'verification_code': code,
-                'email': user_email,
-                'auth0Client': AUTH0_CLIENT,
-            }
-            
-            response = session.get('https://login.seek.com/passwordless/verify_redirect', params=params, headers=headers)
-            auth_code = self._parse_auth_code(response.url)
+            },
+        }
+        response = self.session.post('https://login.seek.com/passwordless/start', json=json_data)
+        logging.info("Waiting 10 seconds for login code email to arrive")
+        time.sleep(10)
 
-            if not auth_code:
-                logging.error("Authorization code not found, cannot proceed")
-                return
-            
-            json_data = {
-                'client_id': CLIENTID,
-                'code': auth_code,
-                'grant_type': 'authorization_code',
-                'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
-            }
+        code = self.mail_client.fetch_code(self.SEEK_LOGIN_SENDER)
+        json_data = {
+            'connection': 'email',
+            'verification_code': code,
+            'email': self.USER_EMAIL,
+            'client_id': self.CLIENT_ID,
+        }
 
-            response = session.post('https://login.seek.com/oauth/token', json=json_data)
-            data = response.json()
-            logging.info(data)
-            bearer = data['access_token']
+        response = self.session.post('https://login.seek.com/passwordless/verify', json=json_data)
+        params = {
+            'client_id': self.CLIENT_ID,
+            'response_type': 'code',
+            'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
+            'scope': 'openid profile email offline_access',
+            'audience': 'https://seek/api/candidate',
+            '_intstate': 'deprecated',
+            'protocol': 'oauth2',
+            'connection': 'email',
+            'verification_code': code,
+            'email': self.USER_EMAIL,
+            'auth0Client': self.AUTH0_CLIENT,
+        }
+        
+        response = self.session.get('https://login.seek.com/passwordless/verify_redirect', params=params)
+        auth_code = self._parse_auth_code(response.url)
 
-            # TODO: save tokens
+        if not auth_code:
+            logging.error("Authorization code not found, cannot proceed")
+            return
+        
+        json_data = {
+            'client_id': self.CLIENT_ID,
+            'code': auth_code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
+        }
+
+        response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
+        data = response.json()
+        # logging.info(data)
+        bearer = data['access_token']
+        # TODO: save tokens
+
+    # def login_with_refresh_token(self):
+    #     refresh_token = ""
+        
+    #     json_data = {
+    #         'client_id': self.CLIENT_ID,
+    #         'refresh_token': refresh_token,
+    #         # 'identity_sdk_version': "9.4.0",
+    #         'grant_type': 'refresh_token',
+    #         # 'redirect_uri': 'https://www.seek.com.au/oauth/callback/',
+    #     }
+
+    #     response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
+    #     data = response.json()
 
     def _parse_auth_code(self, url):
         if "code=" in url:            
@@ -109,3 +131,9 @@ class SeekClient:
             auth_code = params.get('code', [None])[0]
             return auth_code
         return
+
+
+if __name__ == "__main__":
+    mail_client = MailClient("gmail.com")
+    with SeekClient(mail_client) as seek_client:
+        seek_client.login()
