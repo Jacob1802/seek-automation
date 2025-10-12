@@ -26,7 +26,7 @@ def add_args():
     parser.add_argument('--applied_path', 
                         type=str,
                         help='Path to save applied jobs to',
-                        default="application_pipeline/application_materials/applied.csv")
+                        default="application_pipeline/application_materials/applied.json")
 
     parser.add_argument('--mail_protocol', 
                         type=str,
