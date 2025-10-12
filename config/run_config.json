@@ -6,7 +6,8 @@
         "Junior Software Developer",
         "Entry Level Software Developer"
     ],
-    "maxResults": 50,
-    "SortBy": "ListedDate",
-    "requireEmail": true
+    "maxResults": 550,
+    "SortBy": "KeywordsRelevance",
+    "requireEmail": false,
+    "dateRange": 1
 }
