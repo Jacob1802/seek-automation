@@ -8,6 +8,8 @@
     ],
     "maxResults": 550,
     "SortBy": "KeywordsRelevance",
-    "requireEmail": false,
-    "dateRange": 1
+    "suburbOrCity": "Sydney",
+    "state": "NSW",
+    "dateRange": 1,
+    "requireEmail": false
 }

@@ -57,7 +57,10 @@ This project automates the process of applying for jobs by scraping job listings
  - `searchTerms`: Job titles to search
  - `maxResults`: Maximum number of job listings
  - `SortBy`: Sorting method for job listings options: ['ListedDate', 'KeywordRelevance']
+ - `suburbOrCity`: Sydney
+ - `state`: NSW
  - `dateRange`: Day range of jobs to collect 
+ - `requireEmail`: Set to true if you only want to apply via email
 
 **Advanced Configuration**:
  - For more detailed configuration options, refer to the Apify Seek Job Scraper documentation [actor documentation](https://apify.com/websift/seek-job-scraper).
