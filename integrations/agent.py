@@ -62,7 +62,17 @@ class OpenAiAgent:
         initial_cover = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "You are a highly skilled, professional career writer. Your sole task is to generate the complete cover letter text. Respond *only* with the final, polished cover letter text. Do not include any introductory remarks, commentary, explanations, or any text other than the cover letter itself. Adhere strictly to the requested structure and formatting rules."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a highly skilled, professional career writer. "
+                        "Your sole task is to generate the complete cover letter text. "
+                        "Respond *only* with the final, polished cover letter text. "
+                        "Do not include any introductory remarks, commentary, explanations, "
+                        "or any text other than the cover letter itself. "
+                        "Adhere strictly to the requested structure and formatting rules."
+                    )
+                },
                 {"role": "user", "content": prompt}
             ]
         )
@@ -86,7 +96,16 @@ class OpenAiAgent:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "You are an AI assistant specialized in drafting concise, professional, and polite cold emails for recruiters. Your *only* output must be the email body text. Do not include a subject line, any introductory or concluding commentary, or extra text of any kind. Strict adherence to the provided email format is required."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an AI assistant specialized in drafting concise, professional, "
+                        "and polite cold emails for recruiters. Your *only* output must be the "
+                        "email body text. Do not include a subject line, any introductory or "
+                        "concluding commentary, or extra text of any kind. Strict adherence to "
+                        "the provided email format is required."
+                    )
+                },
                 {"role": "user", "content": email_prompt}
             ]
         )

@@ -26,7 +26,7 @@ async def main():
     
     run_config = load_json_file(args.config_path)
     if not run_config:
-        sys.exit(1)
+        sys.exit(f"Aborting: {args.config_path} does not exist")
     resume_txt = extract_text_from_pdf(args.resume_pdf_path)
     args.resume_txt = resume_txt
 

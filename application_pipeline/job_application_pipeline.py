@@ -18,8 +18,8 @@ class ApplicationPipeline:
     def __init__(self, run_config, args):
         self.scraper = JobScraper(run_config)
         self.args = args
-        self.agent = AIAgent(args.first_name, args.model)
-        self.email_sender = MailClient(args.mail_protocol)
+        self.agent = AIAgent(args.first_name, args.model).agent
+        self.mail_client = MailClient(args.mail_protocol)
         self.applied = self._load_applied(args.applied_path)
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.encoded_resume_txt = self.model.encode(self.args.resume_txt, convert_to_numpy=True)
@@ -35,7 +35,7 @@ class ApplicationPipeline:
         jd_vector = self.model.encode(jd_text, convert_to_numpy=True)
         sim_score = 1 - cosine(self.encoded_resume_txt, jd_vector)
 
-        return sim_score
+        return float(sim_score)
 
     def should_skip_email(self, email):
         if email in self.applied['email_history']:
@@ -48,34 +48,36 @@ class ApplicationPipeline:
 
     async def run(self):
         logging.info("Scraping job listings...")
-        job_data = self.scraper.scrape("websift/seek-job-scraper")
+        job_data = await self.scraper.scrape("websift/seek-job-scraper")
         logging.info(f"Found {len(job_data)} jobs with contact information")
         if not job_data:
             logging.info("No jobs found, exiting.")
             return
         
-        with SeekClient(self.args.mail_protocol) as seek_client:
+        with SeekClient(self.mail_client) as seek_client:
             seek_client.login()
 
             for job in job_data:
                 try:
                     job_id = job['id']
+                    logging.info(f"Processing job: {job_id}")
                     if job_id in self.applied['jobs']:
                         logging.info(f"Already applied to job {job_id}, skipping.")
                         continue
                     # Re init agent if using meta ai to avoid limit context window issues
                     if not self.args.use_openai:
-                        self.agent = AIAgent(self.args.first_name)
+                        self.agent = AIAgent(self.args.first_name).agent
                     
                     position = job.get('title', '')
                     raw_content = job.get('content', {})
                     job_description = raw_content.get('sections')
                     if not job_description:
-                        logging.warning("No job description found")
+                        logging.error("No job description found, unable to process job, skipping.")
                         continue
                     
                     score = self.calculate_resume_jd_similarity(" ".join(job_description))
                     if score < 0.4:
+                        logging.info(f"Low similarity score {score} for job {job_id}, skipping.")
                         continue
                     
                     seek_success = False

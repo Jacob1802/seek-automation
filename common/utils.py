@@ -67,7 +67,7 @@ def extract_text_from_pdf(pdf_path):
 def load_json_file(file_path):
     file = Path(file_path)
     if not file.exists():
-        logging.error(f"Error file {file_path} does not exist")
+        logging.warning(f"File {file_path} does not exist")
         return {}
     
     return json.loads(file.read_bytes())
