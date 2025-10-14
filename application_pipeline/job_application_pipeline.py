@@ -88,7 +88,7 @@ class ApplicationPipeline:
                     generate_cover_letter_pdf(cover_letter, self.args.cover_letter_path)
 
                     # Skip over jobs that require questions to be answered
-                    if not job['hasRoleRequirements']:
+                    if not job['hasRoleRequirements'] and seek_client.is_logged_in:
                         success = seek_client.apply(job_id, resume_path=self.args.resume_pdf_path, cover_letter_path=self.args.cover_letter_path)
                         if success:
                             logging.info(f"successfully applied to job {job_id} via seek")
