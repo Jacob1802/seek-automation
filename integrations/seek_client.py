@@ -24,6 +24,7 @@ class SeekClient:
 
     def __init__(self, mail_client: MailClient):
         self.mail_client = mail_client
+        self.is_logged_in = False
     
     def __enter__(self):
         headers = {
@@ -67,8 +68,8 @@ class SeekClient:
             }
             response = self.session.post('https://login.seek.com/passwordless/start', json=json_data)
             response.raise_for_status()
-            logging.info("Waiting 10 seconds for login code email to arrive")
-            time.sleep(10)
+            logging.info("Waiting 5 seconds for login code email to arrive")
+            time.sleep(5)
 
             code = self.mail_client.fetch_code(self.SEEK_LOGIN_SENDER)
             json_data = {
@@ -115,22 +116,39 @@ class SeekClient:
             self.refresh_token = data.get('refresh_token')
             self.token_expiry = time.time() + data.get('expires_in', 0)
             self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
+            self.is_logged_in = True
+            logging.info("Successfully logged in to seek")
 
         except Exception as e:
             logging.error(f"Error during login: {e}")
-    
+
+    def _check_and_renew(self):
+        if self.token_expiry-300 > time.time():
+            return self._renew_token()
+
+        return True
+
     def _renew_token(self):
         json_data = {
             'client_id': self.CLIENT_ID,
             'refresh_token': self.refresh_token,
             'grant_type': 'refresh_token',
         }
+        try:
+            response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
+            response.raise_for_status()
+            data = response.json()
 
-        response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
-        data = response.json()
-        self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
-        self.refresh_token = data.get('refresh_token')
-        self.token_expiry = time.time() + data.get('expires_in', 0)
+            if not data.get('access_token'):
+                raise ValueError("No access_token in response")
+            
+            self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
+            self.refresh_token = data.get('refresh_token')
+            self.token_expiry = time.time() + data.get('expires_in', 0)
+            return True
+        except Exception as e:
+            logging.error(f'Error refreshing token {e}')
+            return False
 
     def _parse_auth_code(self, url):
         if "code=" in url:            
@@ -143,6 +161,9 @@ class SeekClient:
 
     def apply(self, job_id, resume_path, cover_letter_path):
         try:
+            if not self._check_and_renew():
+                return False
+
             resume_uri = self._upload_attachment('Resume', resume_path)
             cover_letter_uri = self._upload_attachment('CoverLetter', cover_letter_path)
             recent_role = self.get_most_recent_role()
@@ -330,10 +351,11 @@ class SeekClient:
             return {}
         except Exception as e:
             logging.error(f"Error fetching most recent role: {e}")
-    
+
+
 if __name__ == "__main__":
     mail_client = MailClient("gmail.com")
     with SeekClient(mail_client) as seek_client:
         seek_client.login()
-        resume_uri = seek_client._upload_attachment('CoverLetter', "application_pipeline/application_materials/electrical resume.pdf")
-        logging.info(f"Uploaded resume, got uri: {resume_uri}")
+        # resume_uri = seek_client._upload_attachment('CoverLetter', "application_pipeline/application_materials/electrical resume.pdf")
+        # logging.info(f"Uploaded resume, got uri: {resume_uri}")
