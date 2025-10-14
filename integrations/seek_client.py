@@ -1,9 +1,7 @@
 from integrations.mail_handler import MailClient
-from urllib.parse import urlparse, parse_qs
-from curl_cffi import requests, CurlMime
 from requests_toolbelt import MultipartEncoder
-
-import requests as rq
+from urllib.parse import urlparse, parse_qs
+from curl_cffi import requests
 from dotenv import load_dotenv
 import logging
 import uuid
