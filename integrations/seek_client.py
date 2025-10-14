@@ -1,6 +1,9 @@
 from integrations.mail_handler import MailClient
 from urllib.parse import urlparse, parse_qs
 from curl_cffi import requests, CurlMime
+from requests_toolbelt import MultipartEncoder
+
+import requests as rq
 from dotenv import load_dotenv
 import logging
 import uuid
@@ -21,7 +24,7 @@ class SeekClient:
     SEEK_LOGIN_SENDER = "noreply@seek.com.au"
     USER_EMAIL = os.getenv("EMAIL_ADDRESS")
 
-    def __init__(self, mail_client):
+    def __init__(self, mail_client: MailClient):
         self.mail_client = mail_client
     
     def __enter__(self):
@@ -111,10 +114,9 @@ class SeekClient:
             response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
             response.raise_for_status()
             data = response.json()
-            self.access_token = data.get('access_token')
             self.refresh_token = data.get('refresh_token')
             self.token_expiry = time.time() + data.get('expires_in', 0)
-            self.session.headers.update({'authorization': f'Bearer {self.access_token}'})
+            self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
 
         except Exception as e:
             logging.error(f"Error during login: {e}")
@@ -128,7 +130,7 @@ class SeekClient:
 
         response = self.session.post('https://login.seek.com/oauth/token', json=json_data)
         data = response.json()
-        self.access_token = data.get('access_token')
+        self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
         self.refresh_token = data.get('refresh_token')
         self.token_expiry = time.time() + data.get('expires_in', 0)
 
@@ -171,7 +173,11 @@ class SeekClient:
             ]
 
             response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
+            # logging.info(f"Application response: {response.text}")
             response.raise_for_status()
+            data = response.json()
+            assert data[0]['data']['submitApplication']['__typename'] == 'SubmitApplicationSuccess', f"Application failed: {data[0]['data']['submitApplication'].get('errors', [])}"
+            logging.info(f"Successfully processed application via seek")
             return True
         except Exception as e:
             logging.error(f"Error during job application: {e}")
@@ -179,7 +185,7 @@ class SeekClient:
 
     def _upload_attachment(self, type, file_path):
         try:
-            mp = CurlMime()
+            actual_filename = os.path.basename(file_path)
             json_data = [
                 {
                     'operationName': 'GetDocumentUploadData',
@@ -193,25 +199,25 @@ class SeekClient:
             response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
             response.raise_for_status()
             response_data = response.json()
-            link = response_data[0]['data']['viewer']['documentUploadFormData']['link']
-            uuid_key = response_data[0]['data']['viewer']['documentUploadFormData']['key']
-            for item in response_data[0]['data']['viewer']['documentUploadFormData']['formFields']:
-                mp.addpart(name=item['key'], data=item['value'])
-                    
-            mp.addpart(
-                name="file",
-                content_type="application/pdf",
-                filename=file_path,
-                local_path=file_path,
+            document_form_data = response_data[0]['data']['viewer']['documentUploadFormData']
+            link = document_form_data['link']
+            uuid_key = document_form_data['key']
+            
+            fields = {item['key']: item['value'].replace('${filename}', actual_filename) if '${filename}' in item['value'] else item['value'] 
+                    for item in document_form_data['formFields']}
+            fields['file'] = (actual_filename, open(file_path, 'rb'), 'application/pdf')
+            mp = MultipartEncoder(fields=fields)
+
+            response = requests.post(
+                link,
+                data=mp.to_string(),
+                headers={'Content-Type': mp.content_type}
+                
             )
 
-            response = self.session.post(
-                link,
-                multipart=mp,
-                impersonate="chrome",
-            )
             response.raise_for_status()
-            time.sleep(5) # Wait for S3 to process the upload
+            time.sleep(5)
+            
             if type == "CoverLetter":
                 json_data = self._process_cover_letter(uuid_key)
             elif type == "Resume":
@@ -222,12 +228,15 @@ class SeekClient:
             response = self.session.post('https://www.seek.com.au/graphql', json=json_data)
             response.raise_for_status()
             data = response.json()
-            uri = data[0]['data']['processUploadedAttachment']['uri']
+            if type == "CoverLetter":
+                uri = data[0]['data']['processUploadedAttachment']['uri']
+            elif type == "Resume":
+                uri = data[0]['data']['processUploadedResume']['resume']['fileMetadata']['uri']
+            
             return uri
         except Exception as e:
             logging.error(f"Error during attachment upload: {e}")
-        finally:
-            mp.close()
+            return None
 
     def _process_resume(self, uuid_key):
         json_data = [
@@ -328,3 +337,5 @@ if __name__ == "__main__":
     mail_client = MailClient("gmail.com")
     with SeekClient(mail_client) as seek_client:
         seek_client.login()
+        resume_uri = seek_client._upload_attachment('CoverLetter', "application_pipeline/application_materials/electrical resume.pdf")
+        logging.info(f"Uploaded resume, got uri: {resume_uri}")
