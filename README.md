@@ -17,7 +17,7 @@ This project automates the process of applying for jobs by scraping job listings
 
 2. **Mail App Password**  
    - Generate an App Password in your mail Account settings for your mail account.
-   - Store the mail account & app password in the `.env` file as `SENDER_MAIL` & `SENDER_PASSWORD`.
+   - Store the mail account & app password in the `.env` file as `EMAIL_ADDRESS` & `EMAIL_APP_PASSWORD`.
 
 3. **Resume Preparation**  
    - Create the following files:
@@ -38,8 +38,8 @@ This project automates the process of applying for jobs by scraping job listings
     ```bash
     APIFY_KEY=<Your Apify API Key>
     OPENAI_KEY=<Your Openai API Key>
-    SENDER_MAIL=<Your Mail Address>
-    SENDER_PASSWORD=<Your Mail App Password>
+    EMAIL_ADDRESS=<Your Mail Address>
+    EMAIL_APP_PASSWORD=<Your Mail App Password>
     ```
 4. **Prepare your resume files**:
     - Ensure `resume.pdf` exist in the `application_pipeline/application_materials` directory.
@@ -57,6 +57,10 @@ This project automates the process of applying for jobs by scraping job listings
  - `searchTerms`: Job titles to search
  - `maxResults`: Maximum number of job listings
  - `SortBy`: Sorting method for job listings options: ['ListedDate', 'KeywordRelevance']
+ - `suburbOrCity`: Sydney
+ - `state`: NSW
+ - `dateRange`: Day range of jobs to collect 
+ - `requireEmail`: Set to true if you only want to apply via email
 
 **Advanced Configuration**:
  - For more detailed configuration options, refer to the Apify Seek Job Scraper documentation [actor documentation](https://apify.com/websift/seek-job-scraper).
@@ -66,11 +70,11 @@ This project automates the process of applying for jobs by scraping job listings
  - `--resume_pdf`: Custom resume PDF path
  - `--config_file`: Custom config file path
  - `--cover_letter_path`: Custom cover letter save location
- - `--smtp_protocol`: Custom SMTP server
+ - `--mail_protocol`: Mail server used e.g gmail.com
  - `--australian_language`: Toggle Australian English e.g prompt llm to convert ize words to ise (default: True)
  - `--model`: The openai model you wish to use
 
 ## Notes
  - Ensure your mail account has secure app access enabled or app-specific passwords configured.
- - Applications are tracked in `application_pipeline/application_materials/applied.csv` to avoid sending duplicates.
+ - Applications are tracked in `application_pipeline/application_materials/applied.json` to avoid sending duplicates.
  - Using other llms official APIs such as Openai or Claude would likely improve performance such as speed & higher quality responses.

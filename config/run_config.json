@@ -6,7 +6,10 @@
         "Junior Software Developer",
         "Entry Level Software Developer"
     ],
-    "maxResults": 50,
-    "SortBy": "ListedDate",
-    "requireEmail": true
+    "maxResults": 550,
+    "SortBy": "KeywordsRelevance",
+    "suburbOrCity": "Sydney",
+    "state": "NSW",
+    "dateRange": 1,
+    "requireEmail": false
 }

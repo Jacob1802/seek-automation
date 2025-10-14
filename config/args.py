@@ -10,7 +10,7 @@ def add_args():
 
     parser.add_argument('--resume_pdf_path', 
                         type=str,
-                        help='Path to resume.pdf file',
+                        help='Path to resume',
                         default="application_pipeline/application_materials/resume.pdf")
 
     parser.add_argument('--config_path', 
@@ -20,18 +20,18 @@ def add_args():
     
     parser.add_argument('--cover_letter_path', 
                         type=str,
-                        help='Path to save cover letter too',
+                        help='Path to cover letter',
                         default="application_pipeline/application_materials/cover_letter.pdf")
     
     parser.add_argument('--applied_path', 
                         type=str,
-                        help='Path to save applied jobs to',
-                        default="application_pipeline/application_materials/applied.csv")
+                        help='Path to applied jobs',
+                        default="application_pipeline/application_materials/applied.json")
 
-    parser.add_argument('--smtp_protocol', 
+    parser.add_argument('--mail_protocol', 
                         type=str,
-                        help='Protocol to send mail',
-                        default="smtp.gmail.com")
+                        help='Mail protocol e.g gmail.com, outlook.com',
+                        default="gmail.com")
 
     # This is set to True by default as seeks largest english userbase is Australia & NZ
     parser.add_argument('--australian_language', 
