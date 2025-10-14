@@ -1,5 +1,5 @@
-from sentence_transformers import SentenceTransformer
 from common.utils import generate_cover_letter_pdf, load_json_file, write_json_file
+from sentence_transformers import SentenceTransformer
 from integrations.mail_handler import MailClient
 from integrations.seek_client import SeekClient
 from scipy.spatial.distance import cosine
@@ -101,7 +101,7 @@ class ApplicationPipeline:
 
                         msg = self.agent.write_email_contents()
 
-                        success = self.email_sender.send_application(
+                        success = self.mail_client.send_application(
                             email,
                             job,
                             msg,
@@ -109,7 +109,6 @@ class ApplicationPipeline:
                             self.args.cover_letter_path
                         )
                         if success:
-                            logging.info(f"Successfully processed application to {email} for {position}, {job_id}")
                             email_success = True
                             emails_contacted.append(email)
                             if email in self.applied['email_history']:

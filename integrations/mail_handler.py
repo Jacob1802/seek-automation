@@ -38,6 +38,7 @@ class MailClient:
                 ]
             )
             self._send_email(msg)
+            logging.info(f"Successfully processed application via email")
             return True
         except Exception as e:
             logging.error(f"Failed to send email: {e}")
