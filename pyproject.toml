@@ -15,4 +15,6 @@ dependencies = [
     "sentence-transformers>=5.1.1",
     "curl-cffi>=0.13.0",
     "requests-toolbelt>=1.0.0",
+    "fastapi>=0.119.0",
+    "uvicorn>=0.37.0",
 ]
