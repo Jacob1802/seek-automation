@@ -6,7 +6,9 @@ This project automates the process of applying for jobs by scraping job listings
 
 - **Job Scraping**: Uses the Apify Seek Job Scraper to fetch job listings based on search terms.
 - **AI-Generated Cover Letters**: Customises cover letters using LLM (MetaAI), ensuring proper Australian formatting.
+- **Automated Applications via Seek**: Automatically applies to jobs directly on Seek.
 - **Email Automation**: Sends job applications with attached resumes and cover letters to recruiters via Gmail.
+- **Resume-Based Job Filtering**: Evaluates job listings against your resume content using a semantic similarity model. Only applies to jobs above a configurable similarity threshold, ensuring relevance and quality.
 - **Tracking Applications**: Tracks sent applications to prevent duplicate submissions.
 
 ## Setup Requirements
@@ -70,9 +72,10 @@ This project automates the process of applying for jobs by scraping job listings
  - `--resume_pdf`: Custom resume PDF path
  - `--config_file`: Custom config file path
  - `--cover_letter_path`: Custom cover letter save location
- - `--mail_protocol`: Mail server used e.g gmail.com
- - `--australian_language`: Toggle Australian English e.g prompt llm to convert ize words to ise (default: True)
- - `--model`: The openai model you wish to use
+ - `--mail_protocol`: Mail server used e.g `gmail.com` or `outlook.com`.
+- `--australian_language`: When turned on, it automatically uses Australian spelling (for example, “organise” instead of “organize”). This is on by default. 
+ - `--model`: The openai model you wish to use for writing cover letters or emails.
+- `--min_score`: Sets the minimum match score between your resume and a job description. Higher scores mean the system will only apply for jobs that are a closer fit to your experience.
 
 ## Notes
  - Ensure your mail account has secure app access enabled or app-specific passwords configured.
