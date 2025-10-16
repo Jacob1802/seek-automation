@@ -43,5 +43,11 @@ def add_args():
                     type=str,
                     help='openai gpt model',
                     default="gpt-4o-mini")
+
+    parser.add_argument('--min_score', 
+                    type=float,
+                    help='Min job matching score',
+                    default=0.4)
+    
     
     return parser.parse_args()

@@ -76,7 +76,7 @@ class ApplicationPipeline:
                         continue
                     
                     score = self.calculate_resume_jd_similarity(" ".join(job_description))
-                    if score < 0.4:
+                    if score < self.args.min_score:
                         logging.info(f"Low similarity score {score} for job {job_id}, skipping.")
                         continue
                     
