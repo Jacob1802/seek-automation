@@ -6,7 +6,7 @@ This project automates the process of applying for jobs by scraping job listings
 
 - **Job Scraping**: Uses the Apify Seek Job Scraper to fetch job listings based on search terms.
 - **AI-Generated Cover Letters**: Customises cover letters using LLM (MetaAI), ensuring proper Australian formatting.
-- **Automated Applications via Seek**: Automatically applies to jobs directly on Seek.
+- **Automated Applications via Seek**: Automated login via email code & application to jobs directly on Seek.
 - **Email Automation**: Sends job applications with attached resumes and cover letters to recruiters via Gmail.
 - **Resume-Based Job Filtering**: Evaluates job listings against your resume content using a semantic similarity model. Only applies to jobs above a configurable similarity threshold, ensuring relevance and quality.
 - **Tracking Applications**: Tracks sent applications to prevent duplicate submissions.
@@ -78,6 +78,7 @@ This project automates the process of applying for jobs by scraping job listings
 - `--min_score`: Sets the minimum match score between your resume and a job description. Higher scores mean the system will only apply for jobs that are a closer fit to your experience.
 
 ## Notes
+ - Currently only supports seek login via email code
  - Ensure your mail account has secure app access enabled or app-specific passwords configured.
  - Applications are tracked in `application_pipeline/application_materials/applied.json` to avoid sending duplicates.
  - Using other llms official APIs such as Openai or Claude would likely improve performance such as speed & higher quality responses.
