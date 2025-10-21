@@ -159,15 +159,18 @@ class SeekClient:
             return auth_code
         return
 
-    def apply(self, job_id, resume_path, cover_letter_path):
+    def apply(self, job_id, resume_path, cover_letter_path, show_recent_role=True):
         try:
             if not self._check_and_renew():
                 return False
 
             resume_uri = self._upload_attachment('Resume', resume_path)
             cover_letter_uri = self._upload_attachment('CoverLetter', cover_letter_path)
-            recent_role = self.get_most_recent_role()
-
+            if show_recent_role:
+                recent_role = self.get_most_recent_role()
+            else:
+                recent_role = {}
+            
             json_data = [
                 {
                     'operationName': 'ApplySubmitApplication',

@@ -33,21 +33,25 @@ def add_args():
                         help='Mail protocol e.g gmail.com, outlook.com',
                         default="gmail.com")
 
-    # This is set to True by default as seeks largest english userbase is Australia & NZ
+    # True by default as seeks largest english userbase is Australia & NZ
     parser.add_argument('--australian_language', 
                         type=bool,
                         help='Convert llm output to australian type language',
                         default=True)
 
     parser.add_argument('--model', 
-                    type=str,
-                    help='openai gpt model',
-                    default="gpt-4o-mini")
+                        type=str,
+                        help='openai gpt model',
+                        default="gpt-4o-mini")
 
     parser.add_argument('--min_score', 
-                    type=float,
-                    help='Min job matching score',
-                    default=0.4)
+                        type=float,
+                        help='Min job matching score',
+                        default=0.4)
     
+    parser.add_argument('--show_recent_role',
+                            type=bool,
+                            help='Adds recent role to seek job application for employers',
+                            default=True)
     
     return parser.parse_args()

@@ -89,7 +89,7 @@ class ApplicationPipeline:
 
                     # Skip over jobs that require questions to be answered
                     if not job['hasRoleRequirements'] and seek_client.is_logged_in:
-                        success = seek_client.apply(job_id, resume_path=self.args.resume_pdf_path, cover_letter_path=self.args.cover_letter_path)
+                        success = seek_client.apply(job_id, resume_path=self.args.resume_pdf_path, cover_letter_path=self.args.cover_letter_path, show_recent_role=self.args.show_recent_role)
                         if success:
                             logging.info(f"successfully applied to job {job_id} via seek")
                             seek_success = True
