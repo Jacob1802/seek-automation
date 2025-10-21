@@ -35,9 +35,9 @@ def add_args():
 
     # True by default as seeks largest english userbase is Australia & NZ
     parser.add_argument('--australian_language', 
-                        type=bool,
-                        help='Convert llm output to australian type language',
-                        default=True)
+                        type=int,
+                        help='Convert llm output to australian type language. 0 = False',
+                        default=1)
 
     parser.add_argument('--model', 
                         type=str,
@@ -50,8 +50,12 @@ def add_args():
                         default=0.4)
     
     parser.add_argument('--show_recent_role',
-                            type=bool,
-                            help='Adds recent role to seek job application for employers',
-                            default=True)
+                            type=int,
+                            help='Adds recent role to seek job application for employers. 0 = False',
+                            default=1)
     
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.australian_language = bool(args.australian_language)
+    args.show_recent_role = bool(args.show_recent_role)
+
+    return args
