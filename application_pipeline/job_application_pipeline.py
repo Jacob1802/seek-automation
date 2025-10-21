@@ -127,7 +127,7 @@ class ApplicationPipeline:
                         'applied_via_email': email_success,
                         'emails_contacted': emails_contacted,
                         'position': position,
-                        'link': job.get('link', '')
+                        'link': job.get('jobLink', '')
                     }
 
                     write_json_file(self.args.applied_path, self.applied)
