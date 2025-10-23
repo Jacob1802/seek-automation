@@ -123,12 +123,17 @@ class SeekClient:
             logging.error(f"Error during login: {e}")
 
     def _check_and_renew(self):
+        if not self.is_logged_in:
+            self.login()
+            return
+        
         if self.token_expiry-300 > time.time():
             return self._renew_token()
 
         return True
 
     def _renew_token(self):
+        # TODO: Add logic to login if refresh fails
         json_data = {
             'client_id': self.CLIENT_ID,
             'refresh_token': self.refresh_token,
@@ -148,6 +153,7 @@ class SeekClient:
             return True
         except Exception as e:
             logging.error(f'Error refreshing token {e}')
+            self.is_logged_in = False
             return False
 
     def _parse_auth_code(self, url):

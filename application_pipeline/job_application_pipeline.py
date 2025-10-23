@@ -48,93 +48,92 @@ class ApplicationPipeline:
 
     async def run(self):
         logging.info("Scraping job listings...")
-        job_data = await self.scraper.scrape("websift/seek-job-scraper")
-        logging.info(f"Found {len(job_data)} jobs with contact information")
-        if not job_data:
-            logging.info("No jobs found, exiting.")
-            return
-        
+        data = await self.scraper.scrape("websift/seek-job-scraper")
         with SeekClient(self.mail_client) as seek_client:
-            seek_client.login()
+            for searchTerm, job_data in data.items():
+                if not job_data:
+                    logging.info(f'No jobs found for search term: {searchTerm}, exiting.')
+                    continue
+                logging.info(f"Found {len(job_data)} jobs for search term: {searchTerm}")
 
-            for job in job_data:
-                try:
-                    job_id = job['id']
-                    logging.info(f"Processing job: {job_id}")
-                    if job_id in self.applied['jobs']:
-                        logging.info(f"Already applied to job {job_id}, skipping.")
-                        continue
-                    # Re init agent if using meta ai to avoid limit context window issues
-                    if not self.args.use_openai:
-                        self.agent = AIAgent(self.args.first_name).agent
-                    
-                    position = job.get('title', '')
-                    raw_content = job.get('content', {})
-                    job_description = raw_content.get('sections')
-                    if not job_description:
-                        logging.error("No job description found, unable to process job, skipping.")
-                        continue
-                    
-                    score = self.calculate_resume_jd_similarity(" ".join(job_description))
-                    if score < self.args.min_score:
-                        logging.info(f"Low similarity score {score} for job {job_id}, skipping.")
-                        continue
-                    
-                    seek_success = False
-                    email_success = False
-                    emails_contacted = []
-
-                    cover_letter = self.agent.prepare_cover_letter(job, self.args.resume_txt, self.args.australian_language)
-                    generate_cover_letter_pdf(cover_letter, self.args.cover_letter_path)
-
-                    # Skip over jobs that require questions to be answered
-                    if not job['hasRoleRequirements'] and seek_client.is_logged_in:
-                        success = seek_client.apply(job_id, resume_path=self.args.resume_pdf_path, cover_letter_path=self.args.cover_letter_path, show_recent_role=self.args.show_recent_role)
-                        if success:
-                            logging.info(f"successfully applied to job {job_id} via seek")
-                            seek_success = True
-
-                        
-                    for email in job['emails']:
-                        if self.should_skip_email(email):
+                for job in job_data:
+                    try:
+                        job_id = job['id']
+                        logging.info(f"Processing job: {job_id}")
+                        if job_id in self.applied['jobs']:
+                            logging.info(f"Already applied to job {job_id}, skipping.")
                             continue
+                        # Re init agent if using meta ai to avoid limit context window issues
+                        if not self.args.use_openai:
+                            self.agent = AIAgent(self.args.first_name).agent
+                        
+                        position = job.get('title', '')
+                        raw_content = job.get('content', {})
+                        job_description = raw_content.get('sections')
+                        if not job_description:
+                            logging.error("No job description found, unable to process job, skipping.")
+                            continue
+                        
+                        score = self.calculate_resume_jd_similarity(" ".join(job_description))
+                        if score < self.args.min_score:
+                            logging.info(f"Low similarity score {score} for job {job_id}, skipping.")
+                            continue
+                        
+                        seek_success = False
+                        email_success = False
+                        emails_contacted = []
 
-                        msg = self.agent.write_email_contents()
+                        cover_letter = self.agent.prepare_cover_letter(job, self.args.resume_txt, self.args.australian_language)
+                        generate_cover_letter_pdf(cover_letter, self.args.cover_letter_path)
 
-                        success = self.mail_client.send_application(
-                            email,
-                            job,
-                            msg,
-                            self.args.resume_pdf_path,
-                            self.args.cover_letter_path
-                        )
-                        if success:
-                            email_success = True
-                            emails_contacted.append(email)
-                            if email in self.applied['email_history']:
-                                self.applied['email_history'][email]['last_contacted'] = datetime.now().isoformat()
-                                self.applied['email_history'][email]['jobs_contacted'].append(job_id)
-                            else:
-                                self.applied['email_history'][email] = {
-                                    'last_contacted': datetime.now().isoformat(),
-                                    'jobs_contacted': [job_id]
-                                }
-                    
-                    self.applied['jobs'][job_id] = {
-                        'applied_on': datetime.now().isoformat(),
-                        'similarity_score': score,
-                        'applied_via_seek': seek_success,
-                        'applied_via_email': email_success,
-                        'emails_contacted': emails_contacted,
-                        'position': position,
-                        'link': job.get('jobLink', '')
-                    }
+                        # Skip over jobs that require questions to be answered
+                        if seek_client.is_logged_in and (not job['hasRoleRequirements'] and not job['isExternalApply']):
+                            success = seek_client.apply(job_id, resume_path=self.args.resume_pdf_path, cover_letter_path=self.args.cover_letter_path, show_recent_role=self.args.show_recent_role)
+                            if success:
+                                logging.info(f"successfully applied to job {job_id} via seek")
+                                seek_success = True
 
-                    write_json_file(self.args.applied_path, self.applied)
-                except Exception as e:
-                    logging.error(f"Error processing job application: {e}")
+                            
+                        for email in job['emails']:
+                            if self.should_skip_email(email):
+                                continue
 
-                # Wait 30sec to not overload api can be removed if using official apis
-                if not self.args.use_openai:
-                    logging.info('sleeping')
-                    time.sleep(30)
+                            msg = self.agent.write_email_contents()
+
+                            success = self.mail_client.send_application(
+                                email,
+                                job,
+                                msg,
+                                self.args.resume_pdf_path,
+                                self.args.cover_letter_path
+                            )
+                            if success:
+                                email_success = True
+                                emails_contacted.append(email)
+                                if email in self.applied['email_history']:
+                                    self.applied['email_history'][email]['last_contacted'] = datetime.now().isoformat()
+                                    self.applied['email_history'][email]['jobs_contacted'].append(job_id)
+                                else:
+                                    self.applied['email_history'][email] = {
+                                        'last_contacted': datetime.now().isoformat(),
+                                        'jobs_contacted': [job_id]
+                                    }
+                        
+                        self.applied['jobs'][job_id] = {
+                            'applied_on': datetime.now().isoformat(),
+                            'similarity_score': score,
+                            'applied_via_seek': seek_success,
+                            'applied_via_email': email_success,
+                            'emails_contacted': emails_contacted,
+                            'position': position,
+                            'link': job.get('jobLink', '')
+                        }
+
+                        write_json_file(self.args.applied_path, self.applied)
+                    except Exception as e:
+                        logging.error(f"Error processing job application: {e}")
+
+                    # Wait 30sec to not overload api can be removed if using official apis
+                    if not self.args.use_openai:
+                        logging.info('sleeping')
+                        time.sleep(30)

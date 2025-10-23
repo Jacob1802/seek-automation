@@ -18,18 +18,20 @@ class JobScraper:
         
     async def scrape(self, actor):
         try:
-            all_data = []
+            all_data = {}
             tasks = []
+            searchTerms = []
             for query in self.run_config['searchTerms']:
                 config = {k: v for k, v in self.run_config.items() if k != 'searchTerms'}
                 config['searchTerm'] = query
+                searchTerms.append(query)
                 tasks.append(self.client.actor(actor).call(run_input=config))
             
             responses = await asyncio.gather(*tasks, return_exceptions=True)
-            for response in responses:
+            for searchTerm, response in zip(searchTerms, responses):
                 if isinstance(response, Exception):
                     continue
-                all_data.extend(await self._get_dataset(response))
+                all_data[searchTerm] = await self._get_dataset(response)
 
             return all_data
         except Exception as e:
