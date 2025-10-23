@@ -31,9 +31,11 @@ class OpenAiAgent:
         job_description = job_content.get('sections', '')
         
         company_profile = job_data.get('companyProfile', {})
-        company_name = company_profile.get('name', 'Unknown company')
+        company_name = company_profile.get('name', 'N/A')
         
         position = job_data.get('title', 'Unknown position')
+        if company_name == 'N/A':
+            company_name = 'Hiring Manager'
 
         australian_language = (
             "Adjust spelling to Australian English (e.g., optimise, customise, utilise instead of optimize, customize, utilize)."
@@ -41,25 +43,75 @@ class OpenAiAgent:
         )
 
         prompt = f"""
-            **Task:** Create a professional and compelling cover letter for the **{position}** position at **{company_name}**.
+            ## Optimized Prompt for Generating a Cover Letter
 
-            **Contextual Data:**
-            - Job Description: {job_description}
-            - My Resume/Experience: {resume}
+            ### Goal
+            You are an expert career consultant and professional writer. Your task is to generate a 
+            **highly targeted, compelling, and professional cover letter** based on the provided 
+            **Resume** and **Job Description** below.
 
-            **Formatting and Output Requirements:**
-            1. The letter must be formatted with **dot points** (bullet points) and clear **line breaks** to ensure readability when converted to PDF.
-            2. The letter must directly address the requirements and skills mentioned in the Job Description, backed up by evidence from the Resume/Experience.
-            3. {australian_language}
+            ### Required Inputs (Context)
+            1.  **[RESUME_TEXT]:**
+                ---
+                {resume}
+                ---
+            2.  **[JOB_DESCRIPTION_TEXT]:**
+                ---
+                {job_description}
+                ---* 
+            3. **Company to Address:** {company_name}
+            4. **Position Applied For:** {position}
+            5.  **Format and Content Constraint (CRITICAL):**
+                * Your output **MUST NOT** contain *any* generic placeholders enclosed in square brackets 
+                (e.g., `[Company Name]`, `[Position Title]`).
+                * **DO NOT** generate any content *before* the salutation or *after* the closing.
+    
+                * **Specifically, you MUST NOT include:**
+                    - The current date
+                    - A sender's address, postcode, or contact information (this is on the resume)
+                    - A recipient's address or postcode
+    
+                * The output must start *directly* with the salutation (e.g., "Dear Hiring Manager,").
+                * The output must end *directly* with the closing (e.g., "Sincerely,"). **Do not add a name after the closing.**
+            ---
 
-            **Required Final Structure (Strictly follow this):**
-            Dear {company_name}
-            [Contents of the letter body]
-            Best Regards
-            {self.name}
-        """
+            ### Constraints and Negative Prompting
 
-        initial_cover = self.client.chat.completions.create(
+            The generated cover letter **must strictly adhere** to the following rules:
+
+            1.  **Skills Fabrication Constraint (CRITICAL):**
+                * **NEVER** invent, fabricate, or include any skill, technology, experience, 
+                accomplishment, or responsibility in the cover letter that is **not explicitly 
+                mentioned** in the provided **[resume]**.
+            2.  **Length and Structure Constraint:** The cover letter must be **no more than 400 words** and must follow a standard professional three-to-five-paragraph business letter format.
+            3.  **Tone Constraint:** The tone must be professional, confident, and enthusiastic.
+            4.  **Language Constraint:** {australian_language}
+
+            ---
+
+            ### Generation Step
+
+            Follow this **two-step process** for your final output:
+
+            #### **Step 1: Analysis and Skill Mapping (Internal Step)**
+            Internally, create a list of 5-7 **key required skills** from the **[JOB_DESCRIPTION_TEXT]**. 
+            Then, cross-reference this list with the **[RESUME_TEXT]** to identify 3-5 **matching skills** that can be used as evidence in the letter.
+
+            #### **Step 2: Cover Letter Generation (Primary Output)**
+            Generate the complete cover letter using all the context and adhering to all constraints.
+
+            ---
+
+            ### **FINAL RESPONSE FORMAT**
+
+            The final output must strictly follow this structure:
+
+            ```
+            [The complete, generated cover letter text, with no extra sections or commentary]
+            ```
+            """
+
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {
@@ -77,8 +129,90 @@ class OpenAiAgent:
             ]
         )
 
-        cover_text = initial_cover.choices[0].message.content.strip()
-        return cover_text
+        cover_text = response.choices[0].message.content.strip()
+        print(cover_text)
+        print("-"*50)
+        final_coverletter = self.review_coverletter(cover_text, resume, job_description)
+        print(final_coverletter)
+        print(cover_text == final_coverletter)
+        return final_coverletter.strip('```')
+
+    def review_coverletter(self, cover_letter_text, original_resume, original_job_description, adjustment_requests=""):
+        prompt = f"""
+            ## Optimized Prompt for Cover Letter Verification and Small Adjustments
+
+            ### Goal
+            You are an expert editor and compliance officer. Your task is to **verify** the provided cover 
+            letter text against the original constraints and then apply any requested **small, stylistic 
+            adjustments** without changing the core factual evidence.
+
+            ### Required Inputs (Context)
+            1.  **[COVER_LETTER_TEXT]:** (The letter to be edited)
+                ---
+                {cover_letter_text}
+                ---
+            2.  **[ORIGINAL_RESUME_TEXT]:** (Used for re-verification)
+                ---
+                {original_resume}
+                ---
+            3.  **[ORIGINAL_JOB_DESCRIPTION_TEXT]:** (Used for context)
+                ---
+                {original_job_description}
+                ---
+            4.  **[ADJUSTMENT_REQUESTS]:**
+                ---
+                {adjustment_requests or "No specific adjustments provided. Focus only on verification and minor flow improvements."}
+                ---
+
+            ### Verification Constraints (CRITICAL)
+
+            You **MUST** ensure the following rules are still strictly met in the final output:
+
+            1.  **NO SKILLS FABRICATION:** The letter *cannot* contain any skill, experience, or claim that is not factually supported by the **[ORIGINAL_RESUME_TEXT]**.
+            2.  **LENGTH/STRUCTURE:** The main cover letter body must remain **under 500 words** and follow a professional business letter structure.
+            ---
+
+            ### Adjustment Process
+            
+            1.  **Verification:** First, internally re-verify the **[COVER_LETTER_TEXT]** against the factual content of the **[ORIGINAL_RESUME_TEXT]**. If a factual error is found (a fabricated skill), **correct the error** by removing the fabricated statement.
+            2.  **Refinement:** Apply any changes requested in the **[ADJUSTMENT_REQUESTS]** while respecting all constraints. If no specific requests are made, make only very minor, high-quality, flow-of-text improvements.
+            3. **PLACEHOLDER REMOVAL (MANDATORY RULE):**
+                - Your final output **MUST NOT** contain any square brackets (`[` or `]`).
+                - If you find *any* text enclosed in square brackets (e.g., `[Date]`, `[Your Address]`, `[Company Name]`), 
+                  you **must delete the placeholder text AND the brackets entirely.**
+                - **Example Transformation:**
+                    - ❌ **Input:** `[Date] \n [Your Address] \n [Postcode] \n \n Dear [Hiring Manager], \n I am applying for the role...`
+                    - ✅ **Correct Output:** `\n \n Dear , \n I am applying for the role...`
+            4.  **Final Output:** Produce the final, polished cover letter text.
+            ---
+
+            ### **FINAL RESPONSE FORMAT**
+
+            Your final output must be **ONLY** the completely verified and adjusted cover letter. Do not include any commentary, analysis, or introductory text.
+
+            ```
+            [The complete, verified, and adjusted cover letter text]
+            ```
+            """
+        
+        response = self.client.chat.completions.create(
+        model=self.model,
+        messages=[
+                {
+                    "role": "system",
+                    "content": (
+                    "You are a professional editor and compliance specialist. "
+                        "Your sole task is to verify and adjust the provided cover letter text. "
+                        "Your response must ONLY be the final, verified, and adjusted cover letter. "
+                        "Strictly adhere to all constraints, especially the 'NO SKILLS FABRICATION' rule."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        final_coverletter = response.choices[0].message.content.strip()
+        return final_coverletter
 
     def write_email_contents(self):
         email_prompt = f"""
@@ -87,7 +221,7 @@ class OpenAiAgent:
             Do not include a subject line.
 
             **Required Output Format (Strictly follow this):**
-            Dear [first name]
+            Dear Hiring Manager,
             [contents of email]
             Best Regards
             {self.name}
