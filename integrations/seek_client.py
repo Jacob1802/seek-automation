@@ -1,3 +1,4 @@
+from common.utils import load_json_file, write_json_file
 from integrations.mail_handler import MailClient
 from requests_toolbelt import MultipartEncoder
 from urllib.parse import urlparse, parse_qs
@@ -21,6 +22,7 @@ class SeekClient:
     CLIENT_ID = "yGBVge66K5NJpSN5u71fU90VcTlEASNu"
     SEEK_LOGIN_SENDER = "noreply@seek.com.au"
     USER_EMAIL = os.getenv("EMAIL_ADDRESS")
+    REFRESH_TOKEN_PATH = "credentials/seek_refresh_token.json"
 
     def __init__(self, mail_client: MailClient):
         self.mail_client = mail_client
@@ -47,13 +49,23 @@ class SeekClient:
         }
 
         self.session = requests.Session(impersonate="chrome", headers=headers, allow_redirects=True)
+        self.refresh_token = load_json_file(self.REFRESH_TOKEN_PATH).get("refresh_token")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.session.close()
+        if self.session:
+            self.session.close()
+        if self.refresh_token:
+            write_json_file(self.REFRESH_TOKEN_PATH, {"refresh_token": self.refresh_token})
 
     def login(self):
         try:
+            if self.refresh_token:
+                success = self._renew_token()
+                if success:
+                    self.is_logged_in = True
+                    return success
+
             json_data = {
                 'client_id': self.CLIENT_ID,
                 'connection': 'email',
@@ -118,22 +130,24 @@ class SeekClient:
             self.session.headers.update({'authorization': f'Bearer {data.get('access_token')}'})
             self.is_logged_in = True
             logging.info("Successfully logged in to seek")
+            return True
 
         except Exception as e:
             logging.error(f"Error during login: {e}")
+            return False
 
     def _check_and_renew(self):
         if not self.is_logged_in:
-            self.login()
-            return
+            success = self.login()
+            return success
         
         if self.token_expiry-300 > time.time():
-            return self._renew_token()
+            success = self._renew_token()
+            return success
 
         return True
 
     def _renew_token(self):
-        # TODO: Add logic to login if refresh fails
         json_data = {
             'client_id': self.CLIENT_ID,
             'refresh_token': self.refresh_token,
@@ -301,6 +315,7 @@ class SeekClient:
         return json_data
     
     def handle_role_requirements(self, job_id):
+        # Not yet implemented
         try:
             json_data = [
                 {
