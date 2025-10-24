@@ -141,7 +141,7 @@ class SeekClient:
             success = self.login()
             return success
         
-        if self.token_expiry-300 > time.time():
+        if time.time() > self.token_expiry - 300:
             success = self._renew_token()
             return success
 
