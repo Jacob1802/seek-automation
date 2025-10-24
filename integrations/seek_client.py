@@ -247,15 +247,16 @@ class SeekClient:
             
             fields = {item['key']: item['value'].replace('${filename}', actual_filename) if '${filename}' in item['value'] else item['value'] 
                     for item in document_form_data['formFields']}
-            fields['file'] = (actual_filename, open(file_path, 'rb'), 'application/pdf')
-            mp = MultipartEncoder(fields=fields)
+            with open(file_path, 'rb') as f:
+                fields['file'] = (actual_filename, f, 'application/pdf')
+                mp = MultipartEncoder(fields=fields)
 
-            response = requests.post(
-                link,
-                data=mp.to_string(),
-                headers={'Content-Type': mp.content_type}
-                
-            )
+                response = requests.post(
+                    link,
+                    data=mp.to_string(),
+                    headers={'Content-Type': mp.content_type}
+                    
+                )
 
             response.raise_for_status()
             time.sleep(5)
