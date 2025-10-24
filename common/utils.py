@@ -7,6 +7,7 @@ from pathlib import Path
 import logging
 import json
 import sys
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -74,6 +75,7 @@ def load_json_file(file_path):
 
 def write_json_file(file_path, data):
     file = Path(file_path)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     try:
         with file.open('w') as f:
             json.dump(data, f, indent=4)
