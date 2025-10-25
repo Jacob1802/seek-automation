@@ -211,7 +211,7 @@ class OpenAiAgent:
             ]
         )
 
-        final_coverletter = response.choices[0].message.content.strip()
+        final_coverletter = response.choices[0].message.content.strip().replace('-', '')
         return final_coverletter
 
     def write_email_contents(self):
