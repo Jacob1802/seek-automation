@@ -10,6 +10,6 @@
     "SortBy": "KeywordsRelevance",
     "suburbOrCity": "Sydney",
     "state": "NSW",
-    "dateRange": 1,
+    "dateRange": 31,
     "requireEmail": false
 }
