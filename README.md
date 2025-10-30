@@ -82,3 +82,4 @@ This project automates the process of applying for jobs by scraping job listings
  - Ensure your mail account has secure app access enabled or app-specific passwords configured.
  - Applications are tracked in `application_pipeline/application_materials/applied.json` to avoid sending duplicates.
  - Using other llms official APIs such as Openai or Claude would likely improve performance such as speed & higher quality responses.
+ - To run this automation 24/7, follow the [Scheduling Guide](docs/SCHEDULING.md).
