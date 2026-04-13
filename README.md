@@ -25,7 +25,7 @@ This project automates the process of applying for jobs by scraping job listings
    - Create the following files:
      - `application_pipeline/application_materials/resume.pdf`: A PDF version of your resume, attached to job applications.
 
-4. **Apify API Key** (optional)
+4. **OpenAI API Key** (optional)
    - Create an [OpenAI account](https://platform.openai.com/) and obtain an [API key](https://platform.openai.com/settings/organization/api-keys).
    - Store the API key in an `.env` file as `OPENAI_KEY`.
 
